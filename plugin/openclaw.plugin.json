@@ -1,0 +1,7 @@
+{
+  "id": "shipmate",
+  "name": "ShipMate",
+  "version": "0.1.0",
+  "description": "Engineering PM tools: GitHub analytics, sprint metrics, task routing, code quality",
+  "entrypoint": "./index.ts"
+}

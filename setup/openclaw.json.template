@@ -1,0 +1,85 @@
+{
+  // === AGENT SETTINGS ===
+  agents: {
+    defaults: {
+      workspace: "{{WORKSPACE_PATH}}",  // install.sh will substitute this
+      // For team chat: enable sandbox (recommended)
+      // sandbox: {
+      //   mode: "all",
+      //   docker: {
+      //     image: "shipmate/sandbox:latest",
+      //     mountWorkspace: true,
+      //     workspaceAccess: "rw",
+      //   },
+      // },
+    },
+  },
+
+  // === TOOL POLICY ===
+  // For team chat: uncomment deny to restrict file system access
+  tools: {
+    // deny: ["group:fs", "group:ui", "group:nodes", "group:automation"],
+    // allow: ["bash", "shipmate_*"],
+    // elevated: { enabled: false },
+  },
+
+  // === SKILLS ===
+  skills: {
+    entries: {
+      shipmate: {
+        enabled: true,
+        env: {
+          // ──────────────────────────────────────────────
+          // P0: Required for core functionality
+          // ──────────────────────────────────────────────
+
+          // GitLab (self-hosted)
+          // Create: GitLab → Settings → Access Tokens → Project Access Token
+          // Scopes: read_api, read_repository, read_merge_request
+          GITLAB_TOKEN: "",
+          GITLAB_HOST: "{{GITLAB_HOST}}",  // e.g., gitlab.company.com
+
+          // GitHub
+          // Create: github.com/settings/tokens → Fine-grained → Select repo
+          // Permissions: Contents(R), PRs(RW), Issues(RW), Actions(R)
+          GITHUB_TOKEN: "",
+
+          // Jira Cloud
+          // Create: id.atlassian.com/manage-profile/security/api-tokens
+          JIRA_BASE_URL: "",      // e.g., https://yourorg.atlassian.net
+          JIRA_API_TOKEN: "",
+          JIRA_USER_EMAIL: "",    // Atlassian account email
+
+          // ──────────────────────────────────────────────
+          // P1: Recommended for full functionality
+          // ──────────────────────────────────────────────
+
+          // Confluence (uses the same Atlassian token as Jira)
+          // CONFLUENCE_BASE_URL is the same as JIRA_BASE_URL
+
+          // Sentry (self-hosted)
+          // Create: Sentry → Settings → API Keys → Auth Token
+          // Scopes: project:read, event:read, issue:read
+          SENTRY_URL: "",         // e.g., https://sentry.company.com
+          SENTRY_AUTH_TOKEN: "",
+          SENTRY_ORG: "",
+          SENTRY_PROJECT: "",
+
+          // Kubernetes
+          // kubectl uses ~/.kube/config — no separate token needed
+          // Make sure kubeconfig is accessible to the OpenClaw environment
+
+          // ──────────────────────────────────────────────
+          // P2: Optional — monitoring & logs
+          // ──────────────────────────────────────────────
+
+          // Grafana
+          // Create: Grafana → Administration → Service Accounts → Token
+          // Role: Viewer (read-only)
+          GRAFANA_URL: "",        // e.g., https://grafana.company.com
+          GRAFANA_TOKEN: "",
+        },
+      },
+    },
+  },
+}

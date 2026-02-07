@@ -1,0 +1,48 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check bash scripts syntax
+        run: |
+          for f in setup/*.sh; do
+            echo "Checking $f..."
+            bash -n "$f" || exit 1
+          done
+          echo "All scripts pass syntax check"
+
+      - name: Check SKILL.md files exist
+        run: |
+          EXPECTED_SKILLS="shipmate code-review project-planning sprint-analytics system-design devops"
+          for skill in $EXPECTED_SKILLS; do
+            if [ ! -f "skills/$skill/SKILL.md" ]; then
+              echo "ERROR: Missing skills/$skill/SKILL.md"
+              exit 1
+            fi
+            echo "OK: skills/$skill/SKILL.md"
+          done
+
+      - name: Check bootstrap files exist
+        run: |
+          for f in bootstrap/SOUL.md bootstrap/AGENTS.md bootstrap/data/team-context.md; do
+            if [ ! -f "$f" ]; then
+              echo "ERROR: Missing $f"
+              exit 1
+            fi
+            echo "OK: $f"
+          done
+
+      - name: Verify install.sh is executable
+        run: test -x setup/install.sh
+
+      - name: Verify verify.sh is executable
+        run: test -x setup/verify.sh
