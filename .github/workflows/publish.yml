@@ -1,0 +1,42 @@
+name: Publish Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify GPG signature on tag
+        run: |
+          git verify-tag "${{ github.ref_name }}" || echo "Warning: Tag not GPG-signed"
+
+      - name: Create release archive
+        run: |
+          RELEASE_NAME="shipmate-${{ github.ref_name }}"
+          tar czf "${RELEASE_NAME}.tar.gz" \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='docs/TZ-*' \
+            skills/ bootstrap/ setup/ plugin/ README.md LICENSE SECURITY.md CONTRIBUTING.md
+          sha256sum "${RELEASE_NAME}.tar.gz" > CHECKSUMS.txt
+
+      - name: Create GitHub Release
+        run: |
+          RELEASE_NAME="shipmate-${{ github.ref_name }}"
+          gh release create "${{ github.ref_name }}" \
+            --generate-notes \
+            --title "ShipMate ${{ github.ref_name }}" \
+            "${RELEASE_NAME}.tar.gz" \
+            CHECKSUMS.txt
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
