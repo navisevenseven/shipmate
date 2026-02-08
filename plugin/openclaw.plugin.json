@@ -1,7 +1,7 @@
 {
   "id": "shipmate",
   "name": "ShipMate",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Engineering PM tools: GitHub/GitLab PR review, sprint metrics, Jira search, team stats — with caching and rate limiting",
   "entrypoint": "./index.ts"
 }

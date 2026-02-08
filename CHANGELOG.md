@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-02-08
+
+### Added
+
+- **Docker Sandbox Image** (`Dockerfile.sandbox`)
+  - Based on `node:20-slim` with `git`, `gh`, `glab`, `jq`, `curl`, `kubectl`
+  - Non-root user `shipmate` (UID 1000)
+  - For OpenClaw sandbox mode — isolates agent bash commands in a container
+  - Multi-arch support (amd64, arm64)
+
+- **Production Docker Image** (`Dockerfile`)
+  - Multi-stage build: plugin compilation + runtime with all CLI tools
+  - OpenClaw gateway integration with ShipMate skills and plugin
+  - Entrypoint with environment validation and diagnostic output
+  - Graceful fallback when OpenClaw is not available
+
+- **Docker Compose** (`docker-compose.yml`)
+  - Full ShipMate service with volume mounts for workspace
+  - Sandbox-only profile for host-based OpenClaw setups
+  - `.env.example` with documented environment variables
+
+- **Railway Deployment** (`railway.json`, `railway.toml`)
+  - One-click deploy template for Railway platform
+  - Dockerfile-based build with health checks
+  - Container isolation by default (no separate sandbox needed)
+
+- **CI/CD** (`.github/workflows/docker.yml`)
+  - Automated Docker image builds on push to main and version tags
+  - Push to GitHub Container Registry (GHCR)
+  - Multi-arch builds (linux/amd64, linux/arm64)
+  - Build cache with GitHub Actions cache
+
+- **Dog-fooding Documentation** (`docs/dogfooding.md`)
+  - 2-4 week internal testing checklist
+  - Per-skill test scenarios with acceptance criteria
+  - Security validation checklist
+  - Performance targets and metrics tracking
+  - Exit criteria for Phase 4 readiness
+
+### Changed
+
+- `setup/openclaw.json.template` — updated sandbox section with GHCR image reference and deployment mode documentation
+
 ## [0.2.0] - 2026-02-08
 
 ### Added

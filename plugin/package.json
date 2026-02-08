@@ -1,6 +1,6 @@
 {
   "name": "@shipmate/plugin",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "ShipMate OpenClaw plugin — GitHub/GitLab/Jira tools with caching and rate limiting",
   "main": "index.ts",
   "type": "module",

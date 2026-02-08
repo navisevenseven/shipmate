@@ -27,7 +27,11 @@ jobs:
             --exclude='.git' \
             --exclude='.github' \
             --exclude='docs/TZ-*' \
-            skills/ bootstrap/ setup/ plugin/ README.md LICENSE SECURITY.md CONTRIBUTING.md
+            --exclude='docs/dogfooding.md' \
+            skills/ bootstrap/ setup/ plugin/ \
+            Dockerfile Dockerfile.sandbox docker-compose.yml .env.example \
+            railway.json railway.toml \
+            README.md LICENSE SECURITY.md CONTRIBUTING.md
           sha256sum "${RELEASE_NAME}.tar.gz" > CHECKSUMS.txt
 
       - name: Create GitHub Release

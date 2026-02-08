@@ -1,60 +1,63 @@
-# ShipMate v0.1.0 — Initial Public Release
+# ShipMate v0.3.0 — Infrastructure & Dog-fooding
 
 ## Highlights
 
-- First open-source release of ShipMate — AI engineering PM for OpenClaw
-- 6 specialized skills for code review, sprint analytics, project planning, DevOps, and system design
-- Full integration with GitLab (self-hosted), GitHub, Jira Cloud, and Kubernetes
-- Three-layer security model for safe team chat deployment
+- Docker sandbox image for secure team chat deployment
+- Production Docker image with OpenClaw + ShipMate (multi-stage build)
+- Railway one-click deployment template
+- Docker Compose for local dog-fooding
+- CI/CD pipeline for automated Docker image builds (GHCR)
 
-## Skills
+## Docker Images
 
-| Skill | What it does |
-|-------|-------------|
-| `code-review` | Deep PR/MR analysis across 6 dimensions (architecture, security, performance, testing, maintainability, correctness) |
-| `sprint-analytics` | Sprint progress, velocity tracking, burndown, blocker detection from Jira + GitLab/GitHub |
-| `project-planning` | Feature decomposition into epics/stories/tasks with Jira/GitLab/GitHub task creation |
-| `devops` | Kubernetes pod status, log retrieval, deployment management |
-| `system-design` | Architecture review, design docs, trade-off analysis |
-| `shipmate` | Master skill — routing, onboarding, context management |
+### Sandbox (`Dockerfile.sandbox`)
 
-## Setup
+Lightweight container with CLI tools for OpenClaw sandbox mode. OpenClaw mounts the target project and executes agent bash commands inside this container — providing filesystem isolation.
 
 ```bash
-git clone https://github.com/navisevenseven/shipmate.git
-cd shipmate
-./setup/install.sh --workspace /path/to/your/project
-./setup/verify.sh
+docker pull ghcr.io/navisevenseven/shipmate-sandbox:latest
 ```
 
-## Integrations
+Includes: `git`, `gh` (GitHub CLI), `glab` (GitLab CLI), `jq`, `curl`, `kubectl`
 
-- **GitLab** (self-hosted) — MRs, pipelines, issues via `glab`
-- **GitHub** — PRs, issues, actions via `gh`
-- **Jira Cloud** — sprints, boards, epics via REST API
-- **Kubernetes** — pods, logs, deployments via `kubectl`
-- **Sentry** — error tracking (connection support)
-- **Grafana** — monitoring dashboards (connection support)
+### Production (`Dockerfile`)
 
-## Security
+Full self-hosted deployment: OpenClaw gateway + ShipMate skills + plugin + CLI tools.
 
-- One Instance = One Project isolation
-- GPG-signed releases with SHA-256 checksums
-- Fine-grained token scoping
-- See [SECURITY.md](SECURITY.md) for full details
+```bash
+docker pull ghcr.io/navisevenseven/shipmate:latest
+```
 
-## Known Limitations
+## Deployment
 
-- Phase 1 uses CLI tools only (no TypeScript plugin yet)
-- No built-in caching (relies on CLI tool behavior)
-- No rate limiting (application must manage)
-- No Docker sandbox image (uses OpenClaw host)
+### Docker Compose (local)
 
-## What's Next (Phase 2)
+```bash
+cp .env.example .env
+# Fill in SHIPMATE_WORKSPACE and tokens
+docker compose up -d
+```
 
-- TypeScript plugin with GraphQL, caching, rate limiting
-- Docker sandbox image
-- ClawHub listing
+### Railway (cloud)
+
+1. Connect GitHub repo to Railway
+2. Set environment variables
+3. Deploy
+
+## Dog-fooding
+
+See [docs/dogfooding.md](docs/dogfooding.md) for the 2-4 week internal testing checklist.
+
+## What's Next
+
+- **Phase 4:** ClawHub listing, community launch, public release
+- Content: articles, demo videos
+- Community posts (Show HN, Reddit, Product Hunt)
+
+## Previous Releases
+
+- [v0.2.0](https://github.com/navisevenseven/shipmate/releases/tag/v0.2.0) — TypeScript Plugin (5 tools, caching, rate limiting)
+- [v0.1.0](https://github.com/navisevenseven/shipmate/releases/tag/v0.1.0) — Skills Pack MVP (6 skills, CLI integrations)
 
 ## Downloads
 

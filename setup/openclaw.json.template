@@ -3,20 +3,29 @@
   agents: {
     defaults: {
       workspace: "{{WORKSPACE_PATH}}",  // install.sh will substitute this
-      // For team chat: enable sandbox (recommended)
+
+      // ── Sandbox (recommended for team chat) ─────────────────
+      // Runs agent bash commands in an isolated Docker container.
+      // The container only sees the mounted workspace — no host access.
+      //
+      // To enable: uncomment the sandbox block below.
+      // Requires Docker on the host (not needed for Railway — it's already containerized).
+      //
       // sandbox: {
-      //   mode: "all",
+      //   mode: "all",              // "all" = every session, "non-main" = only group chats
       //   docker: {
-      //     image: "shipmate/sandbox:latest",
+      //     image: "ghcr.io/navisevenseven/shipmate-sandbox:latest",
       //     mountWorkspace: true,
-      //     workspaceAccess: "rw",
+      //     workspaceAccess: "rw",   // "rw" needed for memory/ persistence
       //   },
       // },
     },
   },
 
   // === TOOL POLICY ===
-  // For team chat: uncomment deny to restrict file system access
+  // For personal use: leave commented (full access).
+  // For team chat: uncomment deny to restrict file system access.
+  // For Railway: uncomment — container provides additional isolation.
   tools: {
     // deny: ["group:fs", "group:ui", "group:nodes", "group:automation"],
     // allow: ["bash", "shipmate_*"],

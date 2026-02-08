@@ -151,6 +151,72 @@ sha256sum -c CHECKSUMS.txt
 gpg --verify CHECKSUMS.txt.asc CHECKSUMS.txt
 ```
 
+## Docker Deployment
+
+### Quick Start with Docker Compose
+
+```bash
+# Clone and configure
+git clone https://github.com/navisevenseven/shipmate.git
+cd shipmate
+cp .env.example .env
+# Edit .env: set SHIPMATE_WORKSPACE and tokens
+
+# Run
+docker compose up -d
+```
+
+### Sandbox Mode (recommended for team chats)
+
+If OpenClaw runs on your host and you only need an isolated container for bash execution:
+
+```bash
+# Build sandbox image
+docker build -f Dockerfile.sandbox -t shipmate-sandbox .
+
+# Or pull from GHCR
+docker pull ghcr.io/navisevenseven/shipmate-sandbox:latest
+```
+
+Then enable sandbox in `openclaw.json`:
+
+```json5
+{
+  agents: {
+    defaults: {
+      sandbox: {
+        mode: "all",
+        docker: {
+          image: "ghcr.io/navisevenseven/shipmate-sandbox:latest",
+          mountWorkspace: true,
+          workspaceAccess: "rw",
+        },
+      },
+    },
+  },
+}
+```
+
+### Build from Source
+
+```bash
+# Production image (OpenClaw + ShipMate + all tools)
+docker build -t shipmate .
+
+# Sandbox image (CLI tools only)
+docker build -f Dockerfile.sandbox -t shipmate-sandbox .
+```
+
+## Railway Deployment
+
+Deploy ShipMate to [Railway](https://railway.app) for cloud-hosted team access:
+
+1. Fork or connect the [ShipMate repo](https://github.com/navisevenseven/shipmate) to Railway
+2. Set environment variables in Railway dashboard (see `.env.example`)
+3. Deploy — Railway auto-detects `railway.json` and builds from `Dockerfile`
+
+Railway provides container isolation by default, so sandbox mode is not required.
+
 ## Plugin (Phase 2)
 
 The ShipMate plugin provides custom tools that replace CLI commands with cached, rate-limited API calls:
@@ -199,9 +265,10 @@ No fork of OpenClaw needed. Works with any OpenClaw instance.
 
 ## Roadmap
 
-- **Phase 1:** Skills-only MVP with CLI tools (`glab`, `gh`, `curl+jq`, `kubectl`)
-- **Phase 2 (current):** TypeScript plugin with GraphQL, caching, rate limiting
-- **Phase 3:** Docker sandbox image, Railway template, ClawHub listing
+- **Phase 1:** Skills-only MVP with CLI tools (`glab`, `gh`, `curl+jq`, `kubectl`) -- done
+- **Phase 2:** TypeScript plugin with GraphQL, caching, rate limiting -- done
+- **Phase 3:** Docker sandbox image, Railway deployment, dog-fooding -- done
+- **Phase 4 (current):** ClawHub listing, community launch, public release
 
 ## Contributing
 

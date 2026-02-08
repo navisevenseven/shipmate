@@ -111,9 +111,7 @@ For each task provide:
 
 ## Task Creation (Optional)
 
-After the user approves the plan, offer to create tasks in their project tracker.
-
-### Jira (if configured)```bash
+After the user approves the plan, offer to create tasks in their project tracker.### Jira (if configured)```bash
 # Create epic
 curl -s -X POST -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
   -H "Content-Type: application/json" \

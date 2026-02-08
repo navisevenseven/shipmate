@@ -104,5 +104,5 @@ export default function register(api: PluginAPI): void {
   }
 
   // --- Summary ---
-  logger.info("plugin", "loaded", `ShipMate v0.2.0 — ${toolsRegistered} tools registered`);
+  logger.info("plugin", "loaded", `ShipMate v0.3.0 — ${toolsRegistered} tools registered`);
 }
