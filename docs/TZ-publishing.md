@@ -32,7 +32,7 @@
 
 | Задача | Команда/Действие | Статус |
 |--------|------------------|--------|
-| Создать репо `github.com/AiYsen/shipmate` | `gh repo create AiYsen/shipmate --public --source=.` | ⏳ |
+| Создать репо `github.com/navisevenseven/shipmate` | `gh repo create navisevenseven/shipmate --public --source=.` | ⏳ |
 | Установить описание | "Open-source AI PM (skills pack + plugin) for OpenClaw" | ⏳ |
 | Добавить топики | `ai`, `project-management`, `openclaw`, `skills-pack`, `plugin`, `open-source` | ⏳ |
 | Установить лицензию MIT | скопировать в `LICENSE` из OpenClaw | ⏳ |
@@ -43,13 +43,13 @@
 
 ```bash
 # Команда агента для GitHub CLI
-gh repo update AiYsen/shipmate \
+gh repo update navisevenseven/shipmate \
   --enable-auto-merge \
   --allow-update-branch \
   --require-code-review-from-code-owners
 
 # Создать правило для main ветки
-gh api repos/AiYsen/shipmate/branches/main/protection \
+gh api repos/navisevenseven/shipmate/branches/main/protection \
   -X PUT \
   -f required_status_checks='{"strict":true,"contexts":["build","test"]}' \
   -f enforce_admins=true \
@@ -145,7 +145,7 @@ Fixes #(issue number)
 ```
 # CODEOWNERS файл для автоматических reviews
 
-* @AiYsen @team-leads
+* @navisevenseven @team-leads
 
 # Skills pack
 /skills/ @skills-team
@@ -201,14 +201,14 @@ jobs:
 
 ```bash
 # Команда для создания labels
-gh label create --repo AiYsen/shipmate "bug" --color "d73a49" --description "Something isn't working"
-gh label create --repo AiYsen/shipmate "feature" --color "a2eeef" --description "New feature request"
-gh label create --repo AiYsen/shipmate "documentation" --color "0075ca" --description "Improvements or additions to documentation"
-gh label create --repo AiYsen/shipmate "security" --color "ee0701" --description "Security vulnerability or patch"
-gh label create --repo AiYsen/shipmate "help-wanted" --color "008672" --description "Extra attention is needed"
-gh label create --repo AiYsen/shipmate "good-first-issue" --color "7057ff" --description "Good for newcomers"
-gh label create --repo AiYsen/shipmate "wontfix" --color "ffffff" --description "This will not be worked on"
-gh label create --repo AiYsen/shipmate "duplicate" --color "cfd3d7" --description "This issue or PR already exists"
+gh label create --repo navisevenseven/shipmate "bug" --color "d73a49" --description "Something isn't working"
+gh label create --repo navisevenseven/shipmate "feature" --color "a2eeef" --description "New feature request"
+gh label create --repo navisevenseven/shipmate "documentation" --color "0075ca" --description "Improvements or additions to documentation"
+gh label create --repo navisevenseven/shipmate "security" --color "ee0701" --description "Security vulnerability or patch"
+gh label create --repo navisevenseven/shipmate "help-wanted" --color "008672" --description "Extra attention is needed"
+gh label create --repo navisevenseven/shipmate "good-first-issue" --color "7057ff" --description "Good for newcomers"
+gh label create --repo navisevenseven/shipmate "wontfix" --color "ffffff" --description "This will not be worked on"
+gh label create --repo navisevenseven/shipmate "duplicate" --color "cfd3d7" --description "This issue or PR already exists"
 ```
 
 ---
@@ -245,7 +245,7 @@ README существует, но нуждается в GTM-ориентиров
 pip install openclaw
 
 # 2. Clone ShipMate
-git clone https://github.com/AiYsen/shipmate.git
+git clone https://github.com/navisevenseven/shipmate.git
 cd shipmate
 
 # 3. Bootstrap your team
@@ -275,8 +275,8 @@ MIT (same as OpenClaw)
 ## Community
 
 - [Discord](https://discord.gg/openclaw)
-- [Discussions](https://github.com/AiYsen/shipmate/discussions)
-- [Issues](https://github.com/AiYsen/shipmate/issues)
+- [Discussions](https://github.com/navisevenseven/shipmate/discussions)
+- [Issues](https://github.com/navisevenseven/shipmate/issues)
 ```
 
 ### 3.3 SEO Keywords
@@ -351,7 +351,7 @@ None (first release)
 
 \`\`\`bash
 pip install shipmate
-openclaw plugin install github.com/AiYsen/shipmate
+openclaw plugin install github.com/navisevenseven/shipmate
 \`\`\`
 
 ## Security
@@ -361,7 +361,7 @@ openclaw plugin install github.com/AiYsen/shipmate
 
 ## Contributors
 
-@AiYsen and community
+@navisevenseven and community
 
 ## Downloads
 
@@ -418,12 +418,12 @@ gh release create v0.1.0 \
 | Description | AI Project Manager for OpenClaw | "Open-source AI PM for engineering teams" |
 | Category | Project Management / AI Agents | Project Management |
 | License | MIT | MIT |
-| GitHub URL | Основной источник | https://github.com/AiYsen/shipmate |
+| GitHub URL | Основной источник | https://github.com/navisevenseven/shipmate |
 | Version | Текущая | 0.1.0 |
 | Requires | openclaw>=4.0 | openclaw>=4.0 |
 | Tags | Поиск/категоризация | ai, pm, project-management, automation |
 | Icon | Logo (256x256) | shipmate-logo.png |
-| Author | @AiYsen | AiYsen |
+| Author | @navisevenseven | navisevenseven |
 | Rating/Review | Собирается с GitHub stars | - |
 
 ### 5.2 ClawHub Listing Page (Markdown)
@@ -431,14 +431,14 @@ gh release create v0.1.0 \
 ```markdown
 # ShipMate
 
-**Verified source: [GitHub](https://github.com/AiYsen/shipmate)**
+**Verified source: [GitHub](https://github.com/navisevenseven/shipmate)**
 
 ## ⚠️ Security Notice
 
 This is verified official plugin. Always download from GitHub releases (primary source).
 
 **Warning:** ~17% of ClawHub skills are malicious (Bitdefender, Feb 2026).
-Verify source and check GPG signatures: see [Security](https://github.com/AiYsen/shipmate/blob/main/docs/security.md)
+Verify source and check GPG signatures: see [Security](https://github.com/navisevenseven/shipmate/blob/main/docs/security.md)
 
 ## What is ShipMate?
 
@@ -455,14 +455,14 @@ AI-powered engineering PM built as skills pack + plugin for OpenClaw.
 
 ```bash
 pip install shipmate
-openclaw plugin install github.com/AiYsen/shipmate
+openclaw plugin install github.com/navisevenseven/shipmate
 ```
 
 ## Links
 
-- **GitHub:** https://github.com/AiYsen/shipmate
-- **Docs:** https://github.com/AiYsen/shipmate/tree/main/docs
-- **Issues:** https://github.com/AiYsen/shipmate/issues
+- **GitHub:** https://github.com/navisevenseven/shipmate
+- **Docs:** https://github.com/navisevenseven/shipmate/tree/main/docs
+- **Issues:** https://github.com/navisevenseven/shipmate/issues
 - **Community:** https://discord.gg/openclaw
 
 ## License
@@ -515,11 +515,11 @@ an open-source AI project manager built as a plugin for OpenClaw.
 📦 Install:
 \`\`\`
 pip install shipmate
-openclaw plugin install github.com/AiYsen/shipmate
+openclaw plugin install github.com/navisevenseven/shipmate
 \`\`\`
 
-📖 Docs: https://github.com/AiYsen/shipmate
-💬 Discuss: https://github.com/AiYsen/shipmate/discussions
+📖 Docs: https://github.com/navisevenseven/shipmate
+💬 Discuss: https://github.com/navisevenseven/shipmate/discussions
 
 **Verify source:** Always download from GitHub. See security warning on ClawHub.
 ```
@@ -545,7 +545,7 @@ an AI PM built as a skills pack + plugin for OpenClaw.
 We believe engineering teams deserve better PM tools.
 ShipMate is MIT licensed and welcomes contributions.
 
-**Get started:** https://github.com/AiYsen/shipmate
+**Get started:** https://github.com/navisevenseven/shipmate
 **Security note:** Download from GitHub (verified source).
 See our security docs for GPG verification.
 
@@ -561,10 +561,10 @@ This is the community hub for ShipMate users and contributors.
 
 ## Quick Links
 
-- 📖 [Documentation](https://github.com/AiYsen/shipmate/tree/main/docs)
-- 🐛 [Report a bug](https://github.com/AiYsen/shipmate/issues/new?template=bug_report.md)
-- 💡 [Request a feature](https://github.com/AiYsen/shipmate/issues/new?template=feature_request.md)
-- 📝 [Setup guide](https://github.com/AiYsen/shipmate/docs/setup-design.md)
+- 📖 [Documentation](https://github.com/navisevenseven/shipmate/tree/main/docs)
+- 🐛 [Report a bug](https://github.com/navisevenseven/shipmate/issues/new?template=bug_report.md)
+- 💡 [Request a feature](https://github.com/navisevenseven/shipmate/issues/new?template=feature_request.md)
+- 📝 [Setup guide](https://github.com/navisevenseven/shipmate/docs/setup-design.md)
 
 ## Channels
 
@@ -785,7 +785,7 @@ Findings → GitHub issues (labeled `dogfood-feedback`)
 ```bash
 # Процесс:
 # 1. Собрать все dogfood feedback в issues
-gh issue list --repo AiYsen/shipmate --label dogfood-feedback
+gh issue list --repo navisevenseven/shipmate --label dogfood-feedback
 
 # 2. Prioritize: Critical → High → Medium → Low
 # 3. Fix in dev branch
@@ -1029,7 +1029,7 @@ Cost estimate: ~2.5-3 person-months
 Pre-Flight Checklist:
 
 [ ] Читать все связанные docs (analysis.md, security.md, setup-design.md)
-[ ] Verify GitHub repo exists: github.com/AiYsen/shipmate
+[ ] Verify GitHub repo exists: github.com/navisevenseven/shipmate
 [ ] All required secrets in environment (.env / CI/CD)
     - GITHUB_TOKEN with repo permissions
     - GPG_KEY for signing
@@ -1150,7 +1150,7 @@ gpg --verify CHECKSUMS.txt.asc CHECKSUMS.txt
 
 ```bash
 # Create repo
-gh repo create AiYsen/shipmate --public --source=.
+gh repo create navisevenseven/shipmate --public --source=.
 
 # Create release
 gh release create v0.1.0 \
@@ -1159,11 +1159,11 @@ gh release create v0.1.0 \
   dist/* CHECKSUMS.txt CHECKSUMS.txt.asc
 
 # Create labels
-gh label create "bug" --repo AiYsen/shipmate --color "d73a49"
+gh label create "bug" --repo navisevenseven/shipmate --color "d73a49"
 
 # View metrics
-gh api repos/AiYsen/shipmate
-gh api repos/AiYsen/shipmate/traffic/views
+gh api repos/navisevenseven/shipmate
+gh api repos/navisevenseven/shipmate/traffic/views
 ```
 
 ### Community Platforms
@@ -1194,20 +1194,20 @@ mutation {
 
 ```bash
 # Watch GitHub metrics
-watch -n 300 'gh api repos/AiYsen/shipmate | jq ".stargazers_count, .forks_count"'
+watch -n 300 'gh api repos/navisevenseven/shipmate | jq ".stargazers_count, .forks_count"'
 
 # Monitor issues
-gh issue list --repo AiYsen/shipmate --state open --limit 10
+gh issue list --repo navisevenseven/shipmate --state open --limit 10
 
 # Check Actions status
-gh run list --repo AiYsen/shipmate --limit 5
+gh run list --repo navisevenseven/shipmate --limit 5
 ```
 
 ---
 
 ## 14. Контрольные документы и ссылки
 
-- **GitHub Repo:** https://github.com/AiYsen/shipmate
+- **GitHub Repo:** https://github.com/navisevenseven/shipmate
 - **Release Checklist:** (этот документ, раздел 12)
 - **Security Policy:** /docs/security.md
 - **Setup Guide:** /docs/setup-design.md

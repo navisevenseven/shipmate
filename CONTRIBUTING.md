@@ -6,7 +6,7 @@ Thank you for your interest in contributing to ShipMate! This document outlines 
 
 ### Reporting Bugs
 
-1. Check [existing issues](https://github.com/AiYsen/shipmate/issues) to avoid duplicates
+1. Check [existing issues](https://github.com/navisevenseven/shipmate/issues) to avoid duplicates
 2. Use the [bug report template](.github/ISSUE_TEMPLATE/bug_report.md)
 3. Include: steps to reproduce, expected vs actual behavior, environment details
 

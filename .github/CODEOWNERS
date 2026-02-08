@@ -1,21 +1,21 @@
 # CODEOWNERS — automatic review assignments
 
 # Default: project owner reviews everything
-* @AiYsen
+* @navisevenseven
 
 # Skills
-/skills/ @AiYsen
+/skills/ @navisevenseven
 
 # Setup & Infrastructure
-/setup/ @AiYsen
+/setup/ @navisevenseven
 
 # Bootstrap
-/bootstrap/ @AiYsen
+/bootstrap/ @navisevenseven
 
 # Documentation
-/docs/ @AiYsen
+/docs/ @navisevenseven
 
 # Security-sensitive files
-SECURITY.md @AiYsen
-/docs/security.md @AiYsen
-/setup/openclaw.json.template @AiYsen
+SECURITY.md @navisevenseven
+/docs/security.md @navisevenseven
+/setup/openclaw.json.template @navisevenseven
