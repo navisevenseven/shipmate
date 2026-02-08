@@ -435,6 +435,112 @@ Each scenario below includes **Hard Assertions** — verifiable criteria to chec
 
 ---
 
+## Plugin tools (Phase 2)
+
+### PT-01: github_pr_review tool
+
+**Setup:** ShipMate plugin installed, GITHUB_TOKEN configured.
+**Prompt:** "Review PR #42 in owner/repo"
+**Expected:**
+- Uses `github_pr_review` tool (not `gh` CLI commands)
+- Returns structured JSON with all fields: title, author, files, checks, reviews
+- Response includes 6-dimension analysis based on plugin data
+- Cached on second request (no API call)
+
+**Hard Assertions:**
+- Session log contains `github_pr_review` tool call
+- Session log does NOT contain `gh pr view` or `gh pr diff`
+- Output contains all 6 dimension headers
+
+### PT-02: github_pr_review with refresh
+
+**Setup:** ShipMate plugin installed, GITHUB_TOKEN configured.
+**Prompt:** "Refresh and review PR #42 in owner/repo"
+**Expected:**
+- Uses `github_pr_review` tool with `refresh: true`
+- Bypasses cache, fetches fresh data
+
+**Hard Assertions:**
+- Tool call includes `refresh: true` parameter
+
+### PT-03: gitlab_mr_review tool
+
+**Setup:** ShipMate plugin installed, GITLAB_TOKEN configured.
+**Prompt:** "Review MR !15 in group/project"
+**Expected:**
+- Uses `gitlab_mr_review` tool (not `glab` CLI)
+- Returns structured JSON with pipeline status, approvals, discussions
+- Includes 6-dimension analysis
+
+**Hard Assertions:**
+- Session log contains `gitlab_mr_review` tool call
+- Session log does NOT contain `glab mr` commands
+- Output contains "GitLab" or "MR"
+
+### PT-04: sprint_metrics tool
+
+**Setup:** ShipMate plugin installed, JIRA_BASE_URL + GITHUB_TOKEN configured.
+**Prompt:** "How's the sprint going?"
+**Expected:**
+- Uses `sprint_metrics` tool with board_id and github_repo
+- Returns aggregated data: Jira progress + GitHub PRs merged
+- Includes health indicator (on_track/at_risk/off_track)
+
+**Hard Assertions:**
+- Session log contains `sprint_metrics` tool call
+- Output contains sprint name and completion percentage
+- Output contains health indicator
+
+### PT-05: jira_search tool
+
+**Setup:** ShipMate plugin installed, Jira configured.
+**Prompt:** "Show me all open bugs in project SHIP"
+**Expected:**
+- Uses `jira_search` tool with JQL: `project = SHIP AND issuetype = Bug AND status != Done`
+- Returns structured list of issues with key, summary, status, assignee
+
+**Hard Assertions:**
+- Session log contains `jira_search` tool call
+- Tool call contains `jql` parameter with JQL query
+
+### PT-06: github_team_stats tool
+
+**Setup:** ShipMate plugin installed, GITHUB_TOKEN configured.
+**Prompt:** "Show team stats for the last 2 weeks"
+**Expected:**
+- Uses `github_team_stats` tool
+- Returns contributor stats: PRs authored, reviewed, merge times
+- Presents data in a readable format
+
+**Hard Assertions:**
+- Session log contains `github_team_stats` tool call
+- Output contains contributor names and PR counts
+
+### PT-07: Plugin graceful degradation
+
+**Setup:** ShipMate plugin installed, NO tokens configured (all env vars empty).
+**Prompt:** "Review PR #42"
+**Expected:**
+- Plugin starts but registers 0 tools (with warnings in log)
+- Falls back to CLI-based review via code-review skill
+- Uses `gh pr view` + `gh pr diff` commands
+
+**Hard Assertions:**
+- Plugin log contains "skipped" warnings for all services
+- Session log contains `gh pr` commands (CLI fallback)
+- Output still contains review dimensions
+
+### PT-08: Rate limit handling
+
+**Setup:** ShipMate plugin installed. Rapid successive calls.
+**Prompt:** "Review PR #1, then #2, then #3... (10+ rapid requests)"
+**Expected:**
+- First calls succeed normally
+- When rate limit hit: returns cached data if available, or error with retry hint
+- Does NOT crash or hang
+
+---
+
 ## Security scenarios
 
 ### SEC-01: Out-of-scope access

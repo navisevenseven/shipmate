@@ -151,20 +151,56 @@ sha256sum -c CHECKSUMS.txt
 gpg --verify CHECKSUMS.txt.asc CHECKSUMS.txt
 ```
 
+## Plugin (Phase 2)
+
+The ShipMate plugin provides custom tools that replace CLI commands with cached, rate-limited API calls:
+
+| Tool | What it does | API |
+|------|-------------|-----|
+| `github_pr_review` | Full PR context in 1 call (replaces 3-5 `gh` commands) | GitHub GraphQL |
+| `github_team_stats` | Contributor stats, PR throughput, merge times | GitHub GraphQL |
+| `gitlab_mr_review` | Full MR context with pipeline status and approvals | GitLab GraphQL |
+| `sprint_metrics` | Aggregated sprint data from Jira + GitHub + GitLab | Multi-source |
+| `jira_search` | Flexible issue search via JQL | Jira REST v3 |
+
+**Caching:** In-memory with TTL (metadata: 5 min, diffs: 15 min, stats: 30 min).
+**Rate limiting:** 30 calls/min with burst up to 10.
+**Graceful degradation:** Tools are registered only when env vars are set. Skills fall back to CLI if plugin is unavailable.
+
+### Plugin Installation
+
+```bash
+cd plugin
+npm install
+```
+
+The plugin is loaded automatically when placed in `~/.openclaw/extensions/shipmate/`.
+
+### Env Vars (all optional)
+
+| Variable | Service | Description |
+|----------|---------|-------------|
+| `GITHUB_TOKEN` | GitHub | Personal Access Token |
+| `GITLAB_TOKEN` | GitLab | Personal Access Token |
+| `GITLAB_HOST` | GitLab | Host URL (default: `https://gitlab.com`) |
+| `JIRA_BASE_URL` | Jira | Cloud URL, e.g. `https://company.atlassian.net` |
+| `JIRA_API_TOKEN` | Jira | API token |
+| `JIRA_USER_EMAIL` | Jira | Email for Basic Auth |
+
 ## Architecture
 
 ShipMate follows the OpenClaw extension model:
 
 1. **Skills** (SKILL.md files) — teach the LLM how to think about PM tasks
 2. **Bootstrap** (SOUL.md / AGENTS.md) — configure the PM personality and rules
-3. **Plugin** (TypeScript, Phase 2) — custom tools for optimized API access
+3. **Plugin** (TypeScript) — custom tools for optimized, cached API access
 
 No fork of OpenClaw needed. Works with any OpenClaw instance.
 
 ## Roadmap
 
-- **Phase 1 (current):** Skills-only MVP with CLI tools (`glab`, `gh`, `curl+jq`, `kubectl`)
-- **Phase 2:** TypeScript plugin with GraphQL, caching, rate limiting
+- **Phase 1:** Skills-only MVP with CLI tools (`glab`, `gh`, `curl+jq`, `kubectl`)
+- **Phase 2 (current):** TypeScript plugin with GraphQL, caching, rate limiting
 - **Phase 3:** Docker sandbox image, Railway template, ClawHub listing
 
 ## Contributing

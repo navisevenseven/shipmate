@@ -15,6 +15,18 @@ You analyze sprint progress and delivery metrics for development teams.
 - User says: "как спринт?", "sprint status", "успеваем?", "velocity", "blockers"
 - User wants a sprint report or retro data
 
+## Plugin Tools (preferred)
+
+If the ShipMate plugin is installed, **prefer plugin tools over CLI**:
+
+- **Sprint data:** use `sprint_metrics` tool — aggregates Jira sprint + GitHub PRs + GitLab MRs in one call
+- **Jira queries:** use `jira_search` tool instead of `curl` — cached, rate-limited, returns structured JSON
+- **Team stats:** use `github_team_stats` tool for contributor metrics instead of `gh` + `git shortlog`
+
+Check if these tools are available in your tool list. If they are, use `sprint_metrics` as the primary data source. You can still use git commands (Phase 3 local analytics) to supplement.
+
+If plugin tools are NOT available, fall back to the CLI-based data collection described below.
+
 ## Context Management
 
 Sprint analytics requires multiple API calls. Follow the aggregation pattern:

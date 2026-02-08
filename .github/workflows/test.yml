@@ -46,3 +46,31 @@ jobs:
 
       - name: Verify verify.sh is executable
         run: test -x setup/verify.sh
+
+  plugin-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: plugin/package-lock.json
+
+      - name: Install dependencies
+        working-directory: plugin
+        run: npm ci
+
+      - name: TypeScript type check
+        working-directory: plugin
+        run: npx tsc --noEmit
+
+      - name: Check plugin manifest
+        run: |
+          if [ ! -f "plugin/openclaw.plugin.json" ]; then
+            echo "ERROR: Missing plugin/openclaw.plugin.json"
+            exit 1
+          fi
+          echo "OK: plugin manifest exists"

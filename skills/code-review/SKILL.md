@@ -15,6 +15,17 @@ You perform thorough, multi-dimensional code reviews on pull requests (GitHub) a
 - User says: "ревью", "review", "посмотри PR", "проверь MR", "проверь код"
 - User shares a PR/MR link
 
+## Plugin Tools (preferred)
+
+If the ShipMate plugin is installed, **prefer plugin tools over CLI** — they are faster (single GraphQL call), cached, and rate-limited:
+
+- **GitHub PRs:** use `github_pr_review` tool instead of `gh pr view` + `gh pr diff`
+- **GitLab MRs:** use `gitlab_mr_review` tool instead of `glab mr view` + `glab mr diff`
+
+Check if these tools are available in your tool list. If they are, use them directly and skip the CLI commands below. The plugin returns the same structured data but in a single cached API call.
+
+If plugin tools are NOT available, fall back to CLI commands as described below.
+
 ## Platform Detection
 
 Detect the platform automatically based on user input:

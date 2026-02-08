@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-02-08
+
+### Added
+
+- **TypeScript Plugin** (Phase 2)
+  - `github_pr_review` — fetch full PR context via GitHub GraphQL in a single call (replaces 3-5 CLI calls)
+  - `github_team_stats` — team contribution metrics: PRs authored/reviewed, merge times, lines changed
+  - `gitlab_mr_review` — fetch full MR context via GitLab GraphQL with pipeline status and approvals
+  - `sprint_metrics` — aggregated sprint data from Jira + GitHub PRs + GitLab MRs
+  - `jira_search` — flexible Jira issue search via JQL with structured output
+
+- **Plugin Infrastructure**
+  - In-memory cache with per-entry TTL (metadata: 5min, diffs: 15min, stats: 30min)
+  - Token bucket rate limiter (30 calls/min, burst 10)
+  - Audit logging for write operations
+  - Graceful degradation — tools registered only when corresponding env vars are set
+
+- **API Clients**
+  - GitHub GraphQL client via `@octokit/graphql`
+  - GitLab GraphQL + REST client (native fetch)
+  - Jira Cloud REST API v3 client with Basic Auth
+
+### Changed
+
+- Skills (`code-review`, `sprint-analytics`) now prefer plugin tools over CLI when available
+- `openclaw.plugin.json` version bumped to 0.2.0
+
 ## [0.1.0] - 2026-02-07
 
 ### Added
