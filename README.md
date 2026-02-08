@@ -46,7 +46,7 @@ Your Team Chat (Telegram / Slack / Discord)
 
 ```bash
 # Clone ShipMate
-git clone https://github.com/AiYsen/shipmate.git
+git clone https://github.com/navisevenseven/shipmate.git
 cd shipmate
 
 # Run installer (validates environment, copies files, generates config)

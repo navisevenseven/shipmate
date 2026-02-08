@@ -113,16 +113,12 @@ For each task provide:
 
 After the user approves the plan, offer to create tasks in their project tracker.
 
-### Jira (if configured)
-
-```bash
+### Jira (if configured)```bash
 # Create epic
 curl -s -X POST -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"fields":{"project":{"key":"<PROJECT_KEY>"},"summary":"<Title>","issuetype":{"name":"Epic"}}}' \
-  "$JIRA_BASE_URL/rest/api/3/issue" | jq '.key'
-
-# Create story under epic
+  "$JIRA_BASE_URL/rest/api/3/issue" | jq '.key'# Create story under epic
 curl -s -X POST -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"fields":{"project":{"key":"<PROJECT_KEY>"},"summary":"<Title>","issuetype":{"name":"Story"},"parent":{"key":"<EPIC_KEY>"}}}' \

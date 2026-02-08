@@ -34,7 +34,7 @@ All releases are GPG-signed. To verify:
 
 ```bash
 # Download release and checksums
-gh release download v0.1.0 --repo AiYsen/shipmate
+gh release download v0.1.0 --repo navisevenseven/shipmate
 
 # Verify checksums
 sha256sum -c CHECKSUMS.txt

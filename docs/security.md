@@ -276,7 +276,7 @@ Railway deployment изолирован по определению — серв
 ```bash
 # Проверить что клонировано из правильного репозитория
 git remote -v
-# Должно показать: github.com/AiYsen/shipmate
+# Должно показать: github.com/navisevenseven/shipmate
 
 # Проверить подпись последнего тега (когда доступно)
 git tag -v $(git describe --tags --abbrev=0)

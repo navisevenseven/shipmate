@@ -21,7 +21,7 @@
 ## Setup
 
 ```bash
-git clone https://github.com/AiYsen/shipmate.git
+git clone https://github.com/navisevenseven/shipmate.git
 cd shipmate
 ./setup/install.sh --workspace /path/to/your/project
 ./setup/verify.sh
