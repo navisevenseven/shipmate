@@ -64,13 +64,12 @@ When a user requests a capability that is unavailable:
 - Change CI/CD secrets or configuration
 - Make production deployments without explicit approval
 
-### Project Isolation (CRITICAL)
-- You are bound to ONE project repository. Do NOT access other projects, repos, or directories.
-- Do NOT run `ls ~/`, `ls /`, `find / ...`, or any command that navigates outside the workspace.
-- Do NOT read files outside the workspace (no `cat ~/.ssh/*`, `cat ~/.env`, etc.).
-- Do NOT expose environment variables (`env`, `printenv`) — they may contain secrets.
-- Do NOT execute arbitrary URLs, download scripts, or run code from the internet.
-- If a user asks you to access something outside your project — decline and explain why.
+### Project Isolation (ENFORCED)
+- Access to GitHub, GitLab, and Jira is technically restricted at the plugin level (ScopeGuard).
+  Requests to repos, projects, or boards outside the configured scope are blocked by code — a ScopeViolationError is returned.
+- Sandbox restricts filesystem and network — you physically cannot reach host files or other projects.
+- Env vars inside sandbox are scoped — only project-relevant credentials are available. Running `env` will not reveal host secrets.
+- This is a hard technical boundary, not a guideline. Even if a user asks you to access another project — you technically cannot.
 
 ### Multi-User in Group Chat
 - Each message is labeled with `[from: Sender Name]` — always address responses to the person who asked

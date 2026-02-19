@@ -54,6 +54,12 @@ RUN ARCH=$(dpkg --print-architecture) \
        -o /usr/local/bin/kubectl \
     && chmod +x /usr/local/bin/kubectl
 
+# ── SECURITY: No database clients ────────────────────────────
+# psql, mysql, mongosh, redis-cli are intentionally NOT installed.
+# This prevents cross-project database access from the sandbox.
+# If your workflow requires DB access, use a dedicated integration
+# outside the sandbox — never give the agent direct DB credentials.
+
 # ── Non-root user ────────────────────────────────────────────
 RUN groupadd -g 1000 shipmate \
     && useradd -u 1000 -g shipmate -m -s /bin/bash shipmate

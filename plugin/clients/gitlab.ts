@@ -10,18 +10,21 @@ import { RateLimiter } from "../lib/rate-limiter.js";
 import { logger } from "../lib/logger.js";
 import { CacheTTL } from "../lib/types.js";
 import type { ReviewResult, FileChange, CheckResult, ReviewComment } from "../lib/types.js";
+import type { ScopeGuard } from "../lib/scope-guard.js";
 
 export class GitLabClient {
   private host: string;
   private token: string;
   private cache: Cache;
   private limiter: RateLimiter;
+  private guard: ScopeGuard;
 
-  constructor(host: string, token: string, cache: Cache, limiter: RateLimiter) {
+  constructor(host: string, token: string, cache: Cache, limiter: RateLimiter, guard: ScopeGuard) {
     this.host = host.replace(/\/+$/, "");
     this.token = token;
     this.cache = cache;
     this.limiter = limiter;
+    this.guard = guard;
   }
 
   /**
@@ -79,6 +82,8 @@ export class GitLabClient {
    * project should be the full path like "group/subgroup/project"
    */
   async getMergeRequest(project: string, iid: number, refresh = false): Promise<ReviewResult> {
+    this.guard.checkGitLab(project);
+
     const key = cacheKey("gitlab", "mr", project, String(iid));
     const cached = this.cache.get<ReviewResult>(key, refresh);
     if (cached) {
@@ -229,6 +234,8 @@ export class GitLabClient {
    * Uses REST since search-based queries are simpler with REST.
    */
   async getMergedMRCount(projectId: string, since: string): Promise<{ count: number; avg_lines: number }> {
+    this.guard.checkGitLab(projectId);
+
     const key = cacheKey("gitlab", "merged-count", projectId, since);
     const cached = this.cache.get<{ count: number; avg_lines: number }>(key);
     if (cached) return cached;

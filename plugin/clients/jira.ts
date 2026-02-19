@@ -9,6 +9,7 @@ import { RateLimiter } from "../lib/rate-limiter.js";
 import { logger } from "../lib/logger.js";
 import { CacheTTL } from "../lib/types.js";
 import type { JiraIssue, JiraSearchResult, SprintMetrics, BlockerItem } from "../lib/types.js";
+import type { ScopeGuard } from "../lib/scope-guard.js";
 
 interface JiraConfig {
   baseUrl: string;
@@ -21,8 +22,9 @@ export class JiraClient {
   private authHeader: string;
   private cache: Cache;
   private limiter: RateLimiter;
+  private guard: ScopeGuard;
 
-  constructor(config: JiraConfig, cache: Cache, limiter: RateLimiter) {
+  constructor(config: JiraConfig, cache: Cache, limiter: RateLimiter, guard: ScopeGuard) {
     this.config = {
       ...config,
       baseUrl: config.baseUrl.replace(/\/+$/, ""),
@@ -30,6 +32,7 @@ export class JiraClient {
     this.authHeader = `Basic ${Buffer.from(`${config.email}:${config.token}`).toString("base64")}`;
     this.cache = cache;
     this.limiter = limiter;
+    this.guard = guard;
   }
 
   /**
@@ -75,6 +78,8 @@ export class JiraClient {
     endDate: string;
     goal: string | null;
   } | null> {
+    this.guard.checkJiraBoard(boardId);
+
     const key = cacheKey("jira", "active-sprint", String(boardId));
     const cached = this.cache.get<any>(key);
     if (cached) return cached;
@@ -261,7 +266,9 @@ export class JiraClient {
    * Search issues via JQL.
    */
   async search(jql: string, fields?: string[], maxResults = 50, refresh = false): Promise<JiraSearchResult> {
-    const key = cacheKey("jira", "search", hashParams({ jql, fields, maxResults }));
+    const scopedJQL = this.guard.scopeJQL(jql);
+
+    const key = cacheKey("jira", "search", hashParams({ jql: scopedJQL, fields, maxResults }));
     const cached = this.cache.get<JiraSearchResult>(key, refresh);
     if (cached) {
       logger.debug("jira_search", "cache hit", key);
@@ -269,14 +276,14 @@ export class JiraClient {
     }
 
     this.limiter.consume();
-    logger.info("jira_search", "searching", jql.substring(0, 80));
+    logger.info("jira_search", "searching", scopedJQL.substring(0, 80));
 
     const defaultFields = ["summary", "status", "assignee", "priority", "issuetype", "customfield_10016", "created", "updated", "labels"];
 
     const data: any = await this.request("/rest/api/3/search", {
       method: "POST",
       body: {
-        jql,
+        jql: scopedJQL,
         maxResults,
         fields: fields ?? defaultFields,
       },

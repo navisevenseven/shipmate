@@ -2,34 +2,33 @@
   // === AGENT SETTINGS ===
   agents: {
     defaults: {
-      workspace: "{{WORKSPACE_PATH}}",  // install.sh will substitute this
+      workspace: "{{WORKSPACE_PATH}}",
 
-      // ── Sandbox (recommended for team chat) ─────────────────
-      // Runs agent bash commands in an isolated Docker container.
-      // The container only sees the mounted workspace — no host access.
-      //
-      // To enable: uncomment the sandbox block below.
-      // Requires Docker on the host (not needed for Railway — it's already containerized).
-      //
-      // sandbox: {
-      //   mode: "all",              // "all" = every session, "non-main" = only group chats
-      //   docker: {
-      //     image: "ghcr.io/navisevenseven/shipmate-sandbox:latest",
-      //     mountWorkspace: true,
-      //     workspaceAccess: "rw",   // "rw" needed for memory/ persistence
-      //   },
-      // },
+      // Sandbox: bash commands run in an isolated Docker container.
+      // The container only sees the mounted workspace — no host filesystem access.
+      sandbox: {
+        mode: "all",
+        docker: {
+          image: "ghcr.io/navisevenseven/shipmate-sandbox:latest",
+          mountWorkspace: true,
+          workspaceAccess: "rw",
+          env: [
+            "GITHUB_TOKEN", "GITLAB_TOKEN", "GITLAB_HOST",
+            "JIRA_BASE_URL", "JIRA_API_TOKEN", "JIRA_USER_EMAIL",
+            "SHIPMATE_SCOPE_GITHUB_REPOS", "SHIPMATE_SCOPE_GITLAB_PROJECTS",
+            "SHIPMATE_SCOPE_JIRA_PROJECTS", "SHIPMATE_SCOPE_JIRA_BOARDS",
+            "SHIPMATE_SCOPE_K8S_NAMESPACES",
+          ],
+        },
+      },
     },
   },
 
-  // === TOOL POLICY ===
-  // For personal use: leave commented (full access).
-  // For team chat: uncomment deny to restrict file system access.
-  // For Railway: uncomment — container provides additional isolation.
+  // === TOOL POLICY (always enforced) ===
   tools: {
-    // deny: ["group:fs", "group:ui", "group:nodes", "group:automation"],
-    // allow: ["bash", "shipmate_*"],
-    // elevated: { enabled: false },
+    deny: ["group:fs", "group:ui", "group:nodes", "group:automation"],
+    allow: ["bash", "shipmate_*"],
+    elevated: { enabled: false },
   },
 
   // === SKILLS ===
@@ -38,55 +37,39 @@
       shipmate: {
         enabled: true,
         env: {
-          // ──────────────────────────────────────────────
-          // P0: Required for core functionality
-          // ──────────────────────────────────────────────
-
-          // GitLab (self-hosted)
-          // Create: GitLab → Settings → Access Tokens → Project Access Token
-          // Scopes: read_api, read_repository, read_merge_request
-          GITLAB_TOKEN: "",
-          GITLAB_HOST: "{{GITLAB_HOST}}",  // e.g., gitlab.company.com
-
-          // GitHub
+          // ── Tokens (create SCOPED tokens only!) ──────────
+          // GitHub: Fine-grained PAT → one repo
           // Create: github.com/settings/tokens → Fine-grained → Select repo
           // Permissions: Contents(R), PRs(RW), Issues(RW), Actions(R)
-          GITHUB_TOKEN: "",
+          GITHUB_TOKEN: "{{GITHUB_TOKEN}}",
+
+          // GitLab: Project Access Token (NOT Personal!)
+          // Create: GitLab → Settings → Access Tokens → Project Access Token
+          // Scopes: read_api, read_repository, read_merge_request
+          GITLAB_TOKEN: "{{GITLAB_TOKEN}}",
+          GITLAB_HOST: "{{GITLAB_HOST}}",
 
           // Jira Cloud
           // Create: id.atlassian.com/manage-profile/security/api-tokens
-          JIRA_BASE_URL: "",      // e.g., https://yourorg.atlassian.net
-          JIRA_API_TOKEN: "",
-          JIRA_USER_EMAIL: "",    // Atlassian account email
+          JIRA_BASE_URL: "{{JIRA_BASE_URL}}",
+          JIRA_API_TOKEN: "{{JIRA_API_TOKEN}}",
+          JIRA_USER_EMAIL: "{{JIRA_USER_EMAIL}}",
 
-          // ──────────────────────────────────────────────
-          // P1: Recommended for full functionality
-          // ──────────────────────────────────────────────
+          // ── Scope restrictions (required — fail-closed) ──
+          // Plugin tools are BLOCKED if scope is not configured.
+          SHIPMATE_SCOPE_GITHUB_REPOS: "{{SCOPE_GITHUB_REPOS}}",
+          SHIPMATE_SCOPE_GITLAB_PROJECTS: "{{SCOPE_GITLAB_PROJECTS}}",
+          SHIPMATE_SCOPE_JIRA_PROJECTS: "{{SCOPE_JIRA_PROJECTS}}",
+          SHIPMATE_SCOPE_JIRA_BOARDS: "{{SCOPE_JIRA_BOARDS}}",
+          SHIPMATE_SCOPE_K8S_NAMESPACES: "{{SCOPE_K8S_NAMESPACES}}",
 
-          // Confluence (uses the same Atlassian token as Jira)
-          // CONFLUENCE_BASE_URL is the same as JIRA_BASE_URL
-
-          // Sentry (self-hosted)
-          // Create: Sentry → Settings → API Keys → Auth Token
-          // Scopes: project:read, event:read, issue:read
-          SENTRY_URL: "",         // e.g., https://sentry.company.com
-          SENTRY_AUTH_TOKEN: "",
-          SENTRY_ORG: "",
-          SENTRY_PROJECT: "",
-
-          // Kubernetes
-          // kubectl uses ~/.kube/config — no separate token needed
-          // Make sure kubeconfig is accessible to the OpenClaw environment
-
-          // ──────────────────────────────────────────────
-          // P2: Optional — monitoring & logs
-          // ──────────────────────────────────────────────
-
-          // Grafana
-          // Create: Grafana → Administration → Service Accounts → Token
-          // Role: Viewer (read-only)
-          GRAFANA_URL: "",        // e.g., https://grafana.company.com
-          GRAFANA_TOKEN: "",
+          // ── Optional monitoring ──────────────────────────
+          SENTRY_URL: "{{SENTRY_URL}}",
+          SENTRY_AUTH_TOKEN: "{{SENTRY_AUTH_TOKEN}}",
+          SENTRY_ORG: "{{SENTRY_ORG}}",
+          SENTRY_PROJECT: "{{SENTRY_PROJECT}}",
+          GRAFANA_URL: "{{GRAFANA_URL}}",
+          GRAFANA_TOKEN: "{{GRAFANA_TOKEN}}",
         },
       },
     },

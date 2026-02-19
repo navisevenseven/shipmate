@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# ShipMate — Installation Script
-# Non-interactive. Validates environment, copies files, generates config.
+# ShipMate — Installation Script (scoped mode)
+# Validates environment, detects scope, copies files, generates config.
 #
 # Usage:
 #   ./setup/install.sh --workspace /path/to/project
@@ -15,6 +15,13 @@ OPENCLAW_DIR="${HOME}/.openclaw"
 SKIP_COPY=false
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Scope variables (populated in Step 2)
+SCOPE_GITHUB_REPOS=""
+SCOPE_GITLAB_PROJECTS=""
+SCOPE_JIRA_PROJECTS=""
+SCOPE_JIRA_BOARDS=""
+SCOPE_K8S_NAMESPACES=""
 
 WARN_COUNT=0
 FAIL_COUNT=0
@@ -71,15 +78,10 @@ WORKSPACE="$(cd "$WORKSPACE" 2>/dev/null && pwd)" || {
 }
 
 # Safety: reject dangerous paths
-case "$WORKSPACE" in
-  "$HOME"|"/"|"/Users/"*[!/]*[!/])
-    # Allow /Users/name/something but not /Users/name itself
-    if [[ "$WORKSPACE" == "$HOME" ]] || [[ "$WORKSPACE" == "/" ]]; then
-      fail "Workspace must be a project directory, not $WORKSPACE"
-      exit 1
-    fi
-    ;;
-esac
+if [[ "$WORKSPACE" == "$HOME" ]] || [[ "$WORKSPACE" == "/" ]]; then
+  fail "Workspace must be a project directory, not $WORKSPACE"
+  exit 1
+fi
 
 if [[ ! -d "$WORKSPACE/.git" ]]; then
   fail "Workspace is not a git repository (no .git directory): $WORKSPACE"
@@ -88,8 +90,62 @@ fi
 
 ok "Workspace: $WORKSPACE (git repo)"
 
-# ── Step 2: Check CLI tools ───────────────────────────────────
-header "Step 2: Check CLI tools"
+# ── Step 2: Detect project scope ──────────────────────────────
+header "Step 2: Configure project scope"
+
+GIT_REMOTE=""
+if git -C "$WORKSPACE" remote get-url origin &>/dev/null; then
+  GIT_REMOTE=$(git -C "$WORKSPACE" remote get-url origin)
+fi
+
+if [[ -n "$GIT_REMOTE" ]]; then
+  # Extract path (owner/repo or group/project or group/subgroup/project)
+  GIT_PATH=""
+  if [[ "$GIT_REMOTE" =~ ^git@[^:]+:(.+)$ ]]; then
+    GIT_PATH="${BASH_REMATCH[1]%.git}"
+  elif [[ "$GIT_REMOTE" =~ ^https?://[^/]+/(.+)$ ]]; then
+    GIT_PATH="${BASH_REMATCH[1]%.git}"
+  fi
+
+  if [[ -n "$GIT_PATH" ]]; then
+    if [[ "$GIT_REMOTE" =~ github\.com ]]; then
+      SCOPE_GITHUB_REPOS="$GIT_PATH"
+      ok "GitHub: $SCOPE_GITHUB_REPOS (from git remote)"
+    elif [[ "$GIT_REMOTE" =~ gitlab ]]; then
+      SCOPE_GITLAB_PROJECTS="$GIT_PATH"
+      ok "GitLab: $SCOPE_GITLAB_PROJECTS (from git remote)"
+    else
+      info "Git remote not GitHub/GitLab: $GIT_REMOTE"
+    fi
+  fi
+else
+  warn "No git remote 'origin' — scope will be empty"
+fi
+
+# Interactive prompts (skip when piped / non-interactive)
+ask_scope() {
+  local prompt="$1"
+  local default="$2"
+  local var_ref="$3"
+  local val
+  read -r -p "  $prompt " val 2>/dev/null || true
+  val="${val:-$default}"
+  val=$(echo "$val" | xargs)
+  if [[ -n "$val" ]] && [[ "$val" != "skip" ]]; then
+    printf -v "$var_ref" "%s" "$val"
+  fi
+}
+
+ask_scope "Jira project key? [skip]: " "skip" "SCOPE_JIRA_PROJECTS"
+ask_scope "Jira board ID? [skip]: " "skip" "SCOPE_JIRA_BOARDS"
+ask_scope "K8s namespace(s, comma-separated)? [skip]: " "skip" "SCOPE_K8S_NAMESPACES"
+
+if [[ -z "$SCOPE_GITHUB_REPOS" ]] && [[ -z "$SCOPE_GITLAB_PROJECTS" ]]; then
+  warn "No repo scope — configure SCOPE_GITHUB_REPOS or SCOPE_GITLAB_PROJECTS in config"
+fi
+
+# ── Step 3: Check CLI tools ───────────────────────────────────
+header "Step 3: Check CLI tools"
 
 check_bin() {
   local name="$1"
@@ -111,35 +167,67 @@ check_bin() {
   fi
 }
 
-check_bin "git"        "P0" "all skills"
-check_bin "glab"       "P0" "code-review, sprint-analytics (GitLab)"
-check_bin "gh"         "P0" "code-review, sprint-analytics (GitHub)"
-check_bin "jq"         "P0" "data processing, Jira integration"
-check_bin "curl"       "P0" "Jira/Confluence/Sentry REST API"
+check_bin "git"        "P0" "all skills" || true
+check_bin "glab"       "P0" "code-review, sprint-analytics (GitLab)" || true
+check_bin "gh"         "P0" "code-review, sprint-analytics (GitHub)" || true
+check_bin "jq"         "P0" "data processing, Jira integration" || true
+check_bin "curl"       "P0" "Jira/Confluence/Sentry REST API" || true
 HAS_KUBECTL=false
-check_bin "kubectl"    "P1" "devops skill" && HAS_KUBECTL=true
-check_bin "sentry-cli" "P1" "incident tracking"
+check_bin "kubectl"    "P1" "devops skill" && HAS_KUBECTL=true || true
+check_bin "sentry-cli" "P1" "incident tracking" || true
 
-# ── Step 3: Check auth status ─────────────────────────────────
-header "Step 3: Check authentication"
+# ── Step 4: Check authentication + validate token scope ────────
+header "Step 4: Check authentication"
 
 GITLAB_HOST=""
 
 # glab auth
 if command -v glab &>/dev/null; then
   if glab auth status &>/dev/null 2>&1; then
-    GITLAB_HOST=$(glab auth status 2>&1 | grep -oP 'Logged in to \K[^ ]+' || echo "")
+    GITLAB_HOST=$(glab auth status 2>&1 | grep -oP 'Logged in to \K[^ ]+' 2>/dev/null || echo "")
     ok "glab: authenticated${GITLAB_HOST:+ ($GITLAB_HOST)}"
+    if [[ -n "$SCOPE_GITLAB_PROJECTS" ]]; then
+      info "Use Project Access Token (not Personal) for GitLab scope"
+    fi
   else
     warn "glab: not authenticated. Run: glab auth login --hostname gitlab.yourhost.com"
   fi
 fi
 
-# gh auth
+# gh auth + token scope validation
 if command -v gh &>/dev/null; then
   if gh auth status &>/dev/null 2>&1; then
-    GH_USER=$(gh auth status 2>&1 | grep -oP 'Logged in to .* as \K\S+' || echo "unknown")
+    GH_USER=$(gh auth status 2>&1 | grep -oP 'Logged in to .* as \K\S+' 2>/dev/null || echo "unknown")
     ok "gh: authenticated ($GH_USER)"
+
+    # Validate token scope if we have GitHub repos in scope
+    if [[ -n "$SCOPE_GITHUB_REPOS" ]]; then
+      VISIBLE_REPOS=$(gh api /user/repos --jq '.[].full_name' 2>/dev/null || true)
+      if [[ -n "$VISIBLE_REPOS" ]]; then
+        # Build scope set (comma-separated → array)
+        SCOPE_ARRAY=()
+        IFS=',' read -ra PARTS <<< "$SCOPE_GITHUB_REPOS"
+        for p in "${PARTS[@]}"; do
+          SCOPE_ARRAY+=("$(echo "$p" | xargs)")
+        done
+        # Find visible repos not in scope
+        EXTRA=""
+        while IFS= read -r repo; do
+          [[ -z "$repo" ]] && continue
+          FOUND=false
+          for s in "${SCOPE_ARRAY[@]}"; do
+            [[ "$repo" == "$s" ]] && { FOUND=true; break; }
+          done
+          [[ "$FOUND" == false ]] && EXTRA="${EXTRA:+$EXTRA, }$repo"
+        done <<< "$VISIBLE_REPOS"
+        if [[ -n "$EXTRA" ]]; then
+          warn "GitHub token sees repos outside scope: $EXTRA"
+          info "Create Fine-grained PAT: github.com/settings/tokens → Fine-grained → Select only: $SCOPE_GITHUB_REPOS"
+        else
+          ok "GitHub token scope OK (only scoped repos visible)"
+        fi
+      fi
+    fi
   else
     warn "gh: not authenticated. Run: gh auth login"
   fi
@@ -154,11 +242,11 @@ if [[ "$HAS_KUBECTL" == true ]]; then
   fi
 fi
 
-# ── Step 4: Copy files ────────────────────────────────────────
+# ── Step 5: Copy files ────────────────────────────────────────
 if [[ "$SKIP_COPY" == true ]]; then
-  header "Step 4: Copy files (SKIPPED — --skip-copy)"
+  header "Step 5: Copy files (SKIPPED — --skip-copy)"
 else
-  header "Step 4: Copy files"
+  header "Step 5: Copy files"
 
   mkdir -p "$OPENCLAW_DIR/skills"
   mkdir -p "$OPENCLAW_DIR/workspace"
@@ -166,7 +254,7 @@ else
   # Copy skills
   if [[ -d "$PROJECT_DIR/skills" ]]; then
     cp -r "$PROJECT_DIR/skills/"* "$OPENCLAW_DIR/skills/" 2>/dev/null || true
-    SKILL_COUNT=$(find "$OPENCLAW_DIR/skills" -name "SKILL.md" | wc -l)
+    SKILL_COUNT=$(find "$OPENCLAW_DIR/skills" -name "SKILL.md" 2>/dev/null | wc -l)
     ok "Skills: $SKILL_COUNT installed to $OPENCLAW_DIR/skills/"
   else
     fail "Skills directory not found: $PROJECT_DIR/skills"
@@ -188,32 +276,77 @@ else
   done
 fi
 
-# ── Step 5: Generate openclaw.json ────────────────────────────
-header "Step 5: Generate configuration"
+# ── Step 6: Generate openclaw.json ──────────────────────────────
+header "Step 6: Generate configuration"
 
 CONFIG_FILE="$OPENCLAW_DIR/openclaw.json"
+TEMPLATE="$PROJECT_DIR/setup/openclaw.json.template"
+mkdir -p "$OPENCLAW_DIR"
 
 if [[ -f "$CONFIG_FILE" ]]; then
   info "Config already exists: $CONFIG_FILE (not overwriting)"
-else
-  TEMPLATE="$PROJECT_DIR/setup/openclaw.json.template"
-  if [[ -f "$TEMPLATE" ]]; then
-    sed \
-      -e "s|{{WORKSPACE_PATH}}|${WORKSPACE}|g" \
-      -e "s|{{GITLAB_HOST}}|${GITLAB_HOST:-gitlab.yourhost.com}|g" \
-      "$TEMPLATE" > "$CONFIG_FILE"
-    ok "Config generated: $CONFIG_FILE"
-    info "Fill in your tokens in $CONFIG_FILE"
-  else
-    fail "Template not found: $TEMPLATE"
-  fi
+elif [[ -f "$TEMPLATE" ]]; then
+  # Substitute all placeholders (use empty string for unset tokens)
+  sed \
+    -e "s|{{WORKSPACE_PATH}}|${WORKSPACE}|g" \
+    -e "s|{{GITLAB_HOST}}|${GITLAB_HOST:-gitlab.yourhost.com}|g" \
+    -e "s|{{GITHUB_TOKEN}}|${GITHUB_TOKEN:-}|g" \
+    -e "s|{{GITLAB_TOKEN}}|${GITLAB_TOKEN:-}|g" \
+    -e "s|{{JIRA_BASE_URL}}|${JIRA_BASE_URL:-}|g" \
+    -e "s|{{JIRA_API_TOKEN}}|${JIRA_API_TOKEN:-}|g" \
+    -e "s|{{JIRA_USER_EMAIL}}|${JIRA_USER_EMAIL:-}|g" \
+    -e "s|{{SCOPE_GITHUB_REPOS}}|${SCOPE_GITHUB_REPOS}|g" \
+    -e "s|{{SCOPE_GITLAB_PROJECTS}}|${SCOPE_GITLAB_PROJECTS}|g" \
+    -e "s|{{SCOPE_JIRA_PROJECTS}}|${SCOPE_JIRA_PROJECTS}|g" \
+    -e "s|{{SCOPE_JIRA_BOARDS}}|${SCOPE_JIRA_BOARDS}|g" \
+    -e "s|{{SCOPE_K8S_NAMESPACES}}|${SCOPE_K8S_NAMESPACES}|g" \
+    -e "s|{{SENTRY_URL}}|${SENTRY_URL:-}|g" \
+    -e "s|{{SENTRY_AUTH_TOKEN}}|${SENTRY_AUTH_TOKEN:-}|g" \
+    -e "s|{{SENTRY_ORG}}|${SENTRY_ORG:-}|g" \
+    -e "s|{{SENTRY_PROJECT}}|${SENTRY_PROJECT:-}|g" \
+    -e "s|{{GRAFANA_URL}}|${GRAFANA_URL:-}|g" \
+    -e "s|{{GRAFANA_TOKEN}}|${GRAFANA_TOKEN:-}|g" \
+    "$TEMPLATE" > "$CONFIG_FILE"
+  ok "Config generated: $CONFIG_FILE"
+  info "Fill in your tokens in $CONFIG_FILE (or use .env)"
+elif [[ ! -f "$TEMPLATE" ]]; then
+  fail "Template not found: $TEMPLATE"
 fi
 
-# ── Step 6: Summary ──────────────────────────────────────────
+# ── Step 7: Generate .env.scoped ────────────────────────────────
+header "Step 7: Generate .env.scoped"
+
+if [[ -f "$WORKSPACE/.env" ]]; then
+  if (cd "$WORKSPACE" && "$PROJECT_DIR/setup/generate-scoped-env.sh" --input .env --output .env.scoped 2>/dev/null); then
+    ok ".env.scoped generated from $WORKSPACE/.env"
+  else
+    warn "generate-scoped-env.sh failed or .env.scoped not created"
+  fi
+else
+  info "No $WORKSPACE/.env — skip .env.scoped (create .env and re-run to generate)"
+fi
+
+# ── Step 8: Docker check ───────────────────────────────────────
+header "Step 8: Docker check"
+
+SANDBOX_IMAGE="ghcr.io/navisevenseven/shipmate-sandbox:latest"
+
+if command -v docker &>/dev/null; then
+  ok "docker: $(docker --version 2>&1 | head -1)"
+  if docker image inspect "$SANDBOX_IMAGE" &>/dev/null 2>&1; then
+    ok "Sandbox image: $SANDBOX_IMAGE (present)"
+  else
+    info "Sandbox image not pulled. Run: docker pull $SANDBOX_IMAGE"
+  fi
+else
+  warn "docker: not found (required for sandbox mode)"
+fi
+
+# ── Step 9: Summary ─────────────────────────────────────────────
 header "Summary"
 
-SKILL_NAMES=$(find "$OPENCLAW_DIR/skills" -name "SKILL.md" -exec dirname {} \; 2>/dev/null | xargs -I{} basename {} | sort | tr '\n' ', ' | sed 's/,$//' | sed 's/,/, /g')
-SKILL_COUNT=$(find "$OPENCLAW_DIR/skills" -name "SKILL.md" 2>/dev/null | wc -l)
+SKILL_NAMES=$(find "$OPENCLAW_DIR/skills" -name "SKILL.md" -exec dirname {} \; 2>/dev/null | xargs -I{} basename {} 2>/dev/null | sort | tr '\n' ', ' | sed 's/,$//' | sed 's/,/, /g') || SKILL_NAMES="none"
+SKILL_COUNT=$(find "$OPENCLAW_DIR/skills" -name "SKILL.md" 2>/dev/null | wc -l) || SKILL_COUNT=0
 
 BIN_AVAILABLE=0
 BIN_TOTAL=7
@@ -223,6 +356,7 @@ done
 
 echo ""
 ok "Workspace: $WORKSPACE (git repo)"
+ok "Scope: GitHub=$SCOPE_GITHUB_REPOS GitLab=$SCOPE_GITLAB_PROJECTS Jira=$SCOPE_JIRA_PROJECTS"
 ok "Skills: $SKILL_COUNT installed (${SKILL_NAMES:-none})"
 ok "Bootstrap: SOUL.md, AGENTS.md, data/team-context.md"
 ok "CLI: $BIN_AVAILABLE/$BIN_TOTAL tools available"
@@ -240,9 +374,12 @@ fi
 
 echo ""
 echo "  Next steps:"
-echo "  1. Fill tokens in $CONFIG_FILE"
-if command -v glab &>/dev/null && ! glab auth status &>/dev/null 2>&1; then
-  echo "  2. Run: glab auth login --hostname <your-gitlab-host>"
+echo "  1. Fill tokens in $CONFIG_FILE (or create $WORKSPACE/.env)"
+if [[ -f "$WORKSPACE/.env" ]]; then
+  echo "  2. .env.scoped generated — use for sandbox isolation"
 fi
-echo "  3. Start OpenClaw and send a message to ShipMate"
+if command -v glab &>/dev/null && ! glab auth status &>/dev/null 2>&1; then
+  echo "  3. Run: glab auth login --hostname <your-gitlab-host>"
+fi
+echo "  4. Start OpenClaw and send a message to ShipMate"
 echo ""

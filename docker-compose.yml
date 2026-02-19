@@ -19,7 +19,7 @@ services:
     volumes:
       - ${SHIPMATE_WORKSPACE:-.}:/workspace:rw
     env_file:
-      - .env
+      - .env.scoped
     environment:
       - OPENCLAW_WORKSPACE=/workspace
     ports:
@@ -40,8 +40,9 @@ services:
     container_name: shipmate-sandbox
     volumes:
       - ${SHIPMATE_WORKSPACE:-.}:/workspace:rw
+      - ${SHIPMATE_KUBE_CONFIG:-/dev/null}:/home/shipmate/.kube/config:ro
     env_file:
-      - .env
+      - .env.scoped
     # Keep container running — OpenClaw connects via docker exec
     stdin_open: true
     tty: true

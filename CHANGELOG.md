@@ -5,6 +5,56 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-02-19
+
+### Added
+
+- **ScopeGuard** (`plugin/lib/scope-guard.ts`)
+  - Plugin-level enforcement for GitHub repos, GitLab projects, Jira projects/boards
+  - Every API call validated against allowlist before execution
+  - `ScopeViolationError` returned on access to non-allowed resources
+  - Automated JQL project injection — all Jira queries scoped to allowed projects
+
+- **Token scope validation** at startup
+  - GitHub: checks visible repos against `SHIPMATE_SCOPE_GITHUB_REPOS`
+  - Warns if token has broader access than configured
+
+- **Scoped sandbox environment**
+  - `.env.scoped` generator (`setup/generate-scoped-env.sh`)
+  - Only project-relevant credentials passed to sandbox container
+  - No database clients in sandbox image (by design)
+
+- **Unit tests** for ScopeGuard and integration logic
+  - `plugin/tests/scope-guard.test.ts` — 20+ test cases
+  - `plugin/tests/integration.test.ts` — fail-closed and JQL injection tests
+
+- **Scope enforcement test scenarios** in `tests/scenarios.md`
+
+### Changed
+
+- `setup/install.sh` — always runs in scoped mode, auto-detects repo from git remote
+- `setup/openclaw.json.template` — sandbox and tool policy enabled by default
+- `docker-compose.yml` — uses `.env.scoped` instead of `.env`
+- `Dockerfile.sandbox` — explicitly excludes database clients
+- `plugin/index.ts` — fail-closed: token without scope = tools not registered
+- `plugin/clients/github.ts` — ScopeGuard validation on every method
+- `plugin/clients/gitlab.ts` — ScopeGuard validation on every method
+- `plugin/clients/jira.ts` — JQL project injection + board validation
+- `bootstrap/AGENTS.md` — updated isolation rules (hard enforcement)
+- `bootstrap/SOUL.md` — updated security mindset section
+
+### Removed
+
+- Personal mode — every instance is always scoped to one project
+- Commented-out sandbox and tool policy in config template
+
+### Security
+
+- Fail-closed: token without scope config = tools not registered
+- All plugin API calls validated against allowlist before execution
+- Sandbox env isolation: only `SHIPMATE_SCOPE_*` and scoped tokens in container
+- No database clients (`psql`, `mysql`, `mongosh`) in sandbox
+
 ## [0.3.0] - 2026-02-08
 
 ### Added

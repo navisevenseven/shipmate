@@ -11,18 +11,21 @@ import { RateLimiter } from "../lib/rate-limiter.js";
 import { logger } from "../lib/logger.js";
 import { CacheTTL } from "../lib/types.js";
 import type { ReviewResult, FileChange, CheckResult, ReviewComment, TeamStats, ContributorStats } from "../lib/types.js";
+import type { ScopeGuard } from "../lib/scope-guard.js";
 
 export class GitHubClient {
   private gql: typeof graphql;
   private cache: Cache;
   private limiter: RateLimiter;
+  private guard: ScopeGuard;
 
-  constructor(token: string, cache: Cache, limiter: RateLimiter) {
+  constructor(token: string, cache: Cache, limiter: RateLimiter, guard: ScopeGuard) {
     this.gql = graphql.defaults({
       headers: { authorization: `token ${token}` },
     });
     this.cache = cache;
     this.limiter = limiter;
+    this.guard = guard;
   }
 
   /**
@@ -30,6 +33,8 @@ export class GitHubClient {
    * Replaces: gh pr view + gh pr diff --stat + gh pr checks
    */
   async getPullRequest(owner: string, repo: string, number: number, refresh = false): Promise<ReviewResult> {
+    this.guard.checkGitHub(owner, repo);
+
     const key = cacheKey("github", "pr", owner, repo, String(number));
     const cached = this.cache.get<ReviewResult>(key, refresh);
     if (cached) {
@@ -158,6 +163,8 @@ export class GitHubClient {
    * Uses GitHub's search API via GraphQL for PR metrics.
    */
   async getTeamStats(owner: string, repo: string, since: string, until?: string): Promise<TeamStats> {
+    this.guard.checkGitHub(owner, repo);
+
     const untilDate = until ?? new Date().toISOString().split("T")[0];
     const key = cacheKey("github", "team-stats", owner, repo, since, untilDate);
     const cached = this.cache.get<TeamStats>(key);
@@ -280,6 +287,8 @@ export class GitHubClient {
    * Fetch merged PR count for sprint metrics.
    */
   async getMergedPRCount(owner: string, repo: string, since: string): Promise<{ count: number; avg_lines: number }> {
+    this.guard.checkGitHub(owner, repo);
+
     const key = cacheKey("github", "merged-count", owner, repo, since);
     const cached = this.cache.get<{ count: number; avg_lines: number }>(key);
     if (cached) return cached;
@@ -317,6 +326,47 @@ export class GitHubClient {
 
     this.cache.set(key, result, CacheTTL.SPRINT);
     return result;
+  }
+  /**
+   * Validate that the token only has access to the allowed repos.
+   * Runs at startup — logs a warning if the token can see extra repos.
+   */
+  async validateTokenScope(): Promise<{ ok: boolean; message: string; visibleRepos: string[] }> {
+    try {
+      const query = `query { viewer { repositories(first: 100, affiliations: [OWNER, COLLABORATOR, ORGANIZATION_MEMBER]) { nodes { nameWithOwner } } } }`;
+      const response: any = await this.gql(query);
+      const repos: string[] = (response.viewer?.repositories?.nodes ?? []).map(
+        (r: any) => (r.nameWithOwner as string).toLowerCase(),
+      );
+
+      const allowed = new Set<string>();
+      if (this.guard.hasGitHubScope) {
+        // Re-read from guard internal state via checkGitHub — we just need the set
+        // For validation, compare visible repos against what's expected
+        const extraRepos = repos.filter((r) => {
+          try {
+            const [owner, repo] = r.split("/");
+            this.guard.checkGitHub(owner!, repo!);
+            return false;
+          } catch {
+            return true;
+          }
+        });
+
+        if (extraRepos.length > 0) {
+          const msg = `Token has access to ${repos.length} repos but only ${repos.length - extraRepos.length} are in scope. ` +
+            `Extra repos: ${extraRepos.slice(0, 5).join(", ")}${extraRepos.length > 5 ? "..." : ""}. ` +
+            `Create a Fine-grained PAT scoped to your project repo only.`;
+          logger.warn("scope-guard", "token scope warning", msg);
+          return { ok: false, message: msg, visibleRepos: repos };
+        }
+      }
+
+      return { ok: true, message: "Token scope matches configuration", visibleRepos: repos };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return { ok: false, message: `Failed to validate token scope: ${msg}`, visibleRepos: [] };
+    }
   }
 }
 

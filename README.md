@@ -130,17 +130,18 @@ Send a message to ShipMate in your OpenClaw chat. On first run, it will:
 
 ## Security
 
-ShipMate is designed for **team chats** where multiple developers interact with it. Security is enforced at setup time.
+ShipMate is designed for **team chats** where multiple developers interact with it. Security is enforced at the code level — not just guidelines.
 
-**Principle: One Instance = One Project.** Each ShipMate is bound to a single repository.
+**Principle: One Instance = One Project.** Each ShipMate is always scoped to a specific project. No personal mode.
 
 | Layer | What | How |
 |-------|------|-----|
-| Workspace | Agent sees only the target project | `agents.defaults.workspace` |
-| Tool Policy | Agent cannot read/write arbitrary files | `group:fs` in deny list |
-| Sandbox | Bash runs in Docker (recommended) | `sandbox.mode: "all"` |
+| **ScopeGuard** | Plugin blocks access to non-allowed repos/projects | `SHIPMATE_SCOPE_*` env vars |
+| **Token Scoping** | Tokens only see the target project | Fine-grained PAT / Project Access Token |
+| **Tool Policy** | Agent cannot read/write arbitrary files | `group:fs` in deny list |
+| **Sandbox** | Bash runs in isolated Docker container | `sandbox.mode: "all"` |
 
-Use **Fine-grained Personal Access Tokens** scoped to a single repository. Never use classic PATs with broad `repo` scope.
+Use **Fine-grained Personal Access Tokens** (GitHub) and **Project Access Tokens** (GitLab) scoped to a single project. Classic PATs with broad `repo` scope are blocked at setup time.
 
 See [Security docs](docs/security.md) for the full threat model.
 
@@ -242,14 +243,18 @@ npm install
 
 The plugin is loaded automatically when placed in `~/.openclaw/extensions/shipmate/`.
 
-### Env Vars (all optional)
+### Env Vars
 
 | Variable | Service | Description |
 |----------|---------|-------------|
-| `GITHUB_TOKEN` | GitHub | Personal Access Token |
-| `GITLAB_TOKEN` | GitLab | Personal Access Token |
+| `SHIPMATE_SCOPE_GITHUB_REPOS` | Scope | Allowed GitHub repos (e.g. `owner/repo`) |
+| `SHIPMATE_SCOPE_GITLAB_PROJECTS` | Scope | Allowed GitLab projects |
+| `SHIPMATE_SCOPE_JIRA_PROJECTS` | Scope | Allowed Jira project keys |
+| `SHIPMATE_SCOPE_JIRA_BOARDS` | Scope | Allowed Jira board IDs |
+| `GITHUB_TOKEN` | GitHub | Fine-grained PAT (scoped to one repo) |
+| `GITLAB_TOKEN` | GitLab | Project Access Token |
 | `GITLAB_HOST` | GitLab | Host URL (default: `https://gitlab.com`) |
-| `JIRA_BASE_URL` | Jira | Cloud URL, e.g. `https://company.atlassian.net` |
+| `JIRA_BASE_URL` | Jira | Cloud URL |
 | `JIRA_API_TOKEN` | Jira | API token |
 | `JIRA_USER_EMAIL` | Jira | Email for Basic Auth |
 
@@ -268,7 +273,7 @@ No fork of OpenClaw needed. Works with any OpenClaw instance.
 - **Phase 1:** Skills-only MVP with CLI tools (`glab`, `gh`, `curl+jq`, `kubectl`) -- done
 - **Phase 2:** TypeScript plugin with GraphQL, caching, rate limiting -- done
 - **Phase 3:** Docker sandbox image, Railway deployment, dog-fooding -- done
-- **Phase 4 (current):** ClawHub listing, community launch, public release
+- **Phase 4 (current):** Scope enforcement, security hardening, community launch
 
 ## Contributing
 

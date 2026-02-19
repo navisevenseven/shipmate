@@ -20,10 +20,11 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-ok()   { echo -e "  ${GREEN}✅${NC} $*"; }
-warn() { echo -e "  ${YELLOW}⚠️${NC}  $*"; }
-fail() { echo -e "  ${RED}❌${NC} $*"; }
-info() { echo -e "  ${BLUE}ℹ${NC}  $*"; }
+ok()    { echo -e "  ${GREEN}✅${NC} $*"; }
+warn()  { echo -e "  ${YELLOW}⚠️${NC}  $*"; }
+fail()  { echo -e "  ${RED}❌${NC} $*"; }
+info()  { echo -e "  ${BLUE}ℹ${NC}  $*"; }
+header() { echo ""; echo "── $1 ───────────────────────────────────"; }
 
 PASS=0
 WARN=0
@@ -234,6 +235,100 @@ if [[ -f "$CONFIG_FILE" ]]; then
   fi
 else
   check_warn "Security: config file not found at $CONFIG_FILE"
+fi
+
+# ── Scope Configuration ────────────────────────────────────
+header "Scope Configuration"
+
+# Check SHIPMATE_SCOPE_* vars from config
+HAS_ANY_SCOPE=false
+
+if [[ -n "${SHIPMATE_SCOPE_GITHUB_REPOS:-}" ]]; then
+  ok "GitHub scope: $SHIPMATE_SCOPE_GITHUB_REPOS"
+  HAS_ANY_SCOPE=true
+else
+  info "SHIPMATE_SCOPE_GITHUB_REPOS: not set"
+fi
+
+if [[ -n "${SHIPMATE_SCOPE_GITLAB_PROJECTS:-}" ]]; then
+  ok "GitLab scope: $SHIPMATE_SCOPE_GITLAB_PROJECTS"
+  HAS_ANY_SCOPE=true
+else
+  info "SHIPMATE_SCOPE_GITLAB_PROJECTS: not set"
+fi
+
+if [[ -n "${SHIPMATE_SCOPE_JIRA_PROJECTS:-}" ]]; then
+  ok "Jira project scope: $SHIPMATE_SCOPE_JIRA_PROJECTS"
+  HAS_ANY_SCOPE=true
+else
+  info "SHIPMATE_SCOPE_JIRA_PROJECTS: not set"
+fi
+
+if [[ -n "${SHIPMATE_SCOPE_JIRA_BOARDS:-}" ]]; then
+  ok "Jira board scope: $SHIPMATE_SCOPE_JIRA_BOARDS"
+else
+  info "SHIPMATE_SCOPE_JIRA_BOARDS: not set (optional)"
+fi
+
+if [[ -n "${SHIPMATE_SCOPE_K8S_NAMESPACES:-}" ]]; then
+  ok "K8s namespace scope: $SHIPMATE_SCOPE_K8S_NAMESPACES"
+else
+  info "SHIPMATE_SCOPE_K8S_NAMESPACES: not set (optional)"
+fi
+
+if [[ "$HAS_ANY_SCOPE" == false ]]; then
+  check_fail "No scope configured — plugin tools will not register (fail-closed)"
+fi
+
+# ── Token Scope Validation ─────────────────────────────────
+header "Token Scope Validation"
+
+# GitHub: check if token sees only scoped repos
+if command -v gh &>/dev/null && gh auth status &>/dev/null 2>&1; then
+  if [[ -n "${SHIPMATE_SCOPE_GITHUB_REPOS:-}" ]]; then
+    VISIBLE_REPOS=$(gh api /user/repos --jq '.[].full_name' 2>/dev/null | tr '\n' ',' | sed 's/,$//' || echo "")
+    EXPECTED_REPO=$(echo "$SHIPMATE_SCOPE_GITHUB_REPOS" | tr ',' '\n' | head -1 | xargs)
+
+    if [[ -n "$VISIBLE_REPOS" ]]; then
+      REPO_COUNT=$(echo "$VISIBLE_REPOS" | tr ',' '\n' | wc -l | xargs)
+      if [[ $REPO_COUNT -le 2 ]]; then
+        ok "GitHub token sees $REPO_COUNT repo(s): $VISIBLE_REPOS"
+      else
+        warn "GitHub token sees $REPO_COUNT repos — consider using a Fine-grained PAT scoped to $EXPECTED_REPO only"
+      fi
+    fi
+  fi
+fi
+
+# .env.scoped check
+if [[ -f ".env.scoped" ]]; then
+  SCOPED_VAR_COUNT=$(grep -c "=" .env.scoped 2>/dev/null || echo "0")
+  ok ".env.scoped exists ($SCOPED_VAR_COUNT variables)"
+
+  # Check for dangerous vars that should NOT be in .env.scoped
+  for dangerous_var in DATABASE_URL REDIS_URL AWS_SECRET_ACCESS_KEY; do
+    if grep -q "^${dangerous_var}=" .env.scoped 2>/dev/null; then
+      check_fail ".env.scoped contains $dangerous_var — this should not be in the sandbox!"
+    fi
+  done
+else
+  warn ".env.scoped not found — run setup/generate-scoped-env.sh"
+fi
+
+# Docker / Sandbox check
+if command -v docker &>/dev/null; then
+  if docker ps &>/dev/null 2>&1; then
+    ok "Docker: available"
+    if docker image inspect ghcr.io/navisevenseven/shipmate-sandbox:latest &>/dev/null 2>&1; then
+      ok "Sandbox image: present"
+    else
+      warn "Sandbox image not found — run: docker pull ghcr.io/navisevenseven/shipmate-sandbox:latest"
+    fi
+  else
+    warn "Docker: daemon not running"
+  fi
+else
+  warn "Docker: not installed (sandbox requires Docker)"
 fi
 
 # ── Summary ──────────────────────────────────────────────────

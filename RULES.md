@@ -53,14 +53,15 @@ projects/shipmate/
 
 Подробная модель: `docs/security.md`
 
-**Принцип:** One Instance = One Project. Каждый ShipMate привязан к одному репозиторию.
+**Принцип:** One Instance = One Project. Каждый ShipMate привязан к одному репозиторию. Нет personal mode — всегда scoped.
 
-**Три уровня изоляции:**
-1. **Workspace** — `agents.defaults.workspace` указывает на корень проекта
-2. **Tool Policy** — `group:fs` в deny, `elevated: false`
-3. **Sandbox** — Docker для bash (рекомендуется для team deployments)
+**Четыре уровня изоляции (все обязательные):**
+1. **ScopeGuard (plugin)** — allowlist для GitHub repos, GitLab projects, Jira projects/boards. Fail-closed: нет scope = tools не регистрируются
+2. **Token Scoping** — Fine-grained PAT (GitHub), Project Access Token (GitLab). Валидируется при setup
+3. **Tool Policy** — `group:fs` в deny, `elevated: false`
+4. **Sandbox** — Docker для bash, только workspace + scoped env vars
 
-**Setup enforcement:** ShipMate отказывается запускаться при небезопасной конфигурации.
+**Setup enforcement:** ShipMate отказывается регистрировать tools при отсутствии scope конфигурации.
 
 ## Запрещено
 
