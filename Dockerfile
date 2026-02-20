@@ -8,7 +8,10 @@
 #
 # Run:
 #   docker run -v /path/to/project:/workspace \
-#     -e GITHUB_TOKEN=... -e GITLAB_TOKEN=... \
+#     -e SHIPMATE_REPOS=owner/repo \
+#     -e GITHUB_TOKEN=... \
+#     -e TELEGRAM_BOT_TOKEN=... \
+#     -e ANTHROPIC_API_KEY=... \
 #     shipmate
 
 # ── Stage 1: Build plugin ───────────────────────────────────
@@ -68,12 +71,10 @@ RUN ARCH=$(dpkg --print-architecture) \
        -o /usr/local/bin/kubectl \
     && chmod +x /usr/local/bin/kubectl
 
-# ── OpenClaw (installed globally) ────────────────────────────
-# OpenClaw is the runtime that loads ShipMate skills and plugin.
-# Pin to a stable version; update when compatibility is verified.
-ARG OPENCLAW_VERSION=latest
+# ── OpenClaw (pinned version) ────────────────────────────────
+ARG OPENCLAW_VERSION=0.12.0
 RUN npm install -g openclaw@${OPENCLAW_VERSION} --ignore-scripts 2>/dev/null \
-    || echo "WARN: openclaw package not found — ensure it is available or mount as volume"
+    || echo "WARN: openclaw@${OPENCLAW_VERSION} not found — ensure it is available or mount as volume"
 
 # ── Application layout ──────────────────────────────────────
 WORKDIR /app
@@ -93,84 +94,17 @@ COPY --from=builder /build/plugin/node_modules/ ./plugin/node_modules/
 RUN mkdir -p /workspace
 VOLUME /workspace
 
-# ── Environment (all optional — graceful degradation) ────────
-# GitHub
-ENV GITHUB_TOKEN=""
-# GitLab
-ENV GITLAB_TOKEN=""
-ENV GITLAB_HOST="https://gitlab.com"
-# Jira
-ENV JIRA_BASE_URL=""
-ENV JIRA_API_TOKEN=""
-ENV JIRA_USER_EMAIL=""
-# Sentry
-ENV SENTRY_URL=""
-ENV SENTRY_AUTH_TOKEN=""
-ENV SENTRY_ORG=""
-ENV SENTRY_PROJECT=""
-# Grafana
-ENV GRAFANA_URL=""
-ENV GRAFANA_TOKEN=""
-# OpenClaw
+# ── Environment (required vars documented in .env.example) ───
 ENV OPENCLAW_WORKSPACE="/workspace"
+ENV OPENCLAW_GATEWAY_PORT="18789"
 
-# ── Healthcheck ──────────────────────────────────────────────
+# ── Healthcheck (checks actual OpenClaw gateway) ─────────────
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-    CMD node -e "console.log('ok')" || exit 1
+    CMD curl -sf http://localhost:${OPENCLAW_GATEWAY_PORT}/health || exit 1
 
-# ── Entrypoint ───────────────────────────────────────────────
-# Start OpenClaw gateway with ShipMate configuration.
-# Override CMD to pass additional arguments.
-COPY <<'ENTRYPOINT_SCRIPT' /app/entrypoint.sh
-#!/bin/bash
-set -e
+# ── Expose gateway port ─────────────────────────────────────
+EXPOSE ${OPENCLAW_GATEWAY_PORT}
 
-echo "╔══════════════════════════════════════╗"
-echo "║   🚢 ShipMate v0.3.0                ║"
-echo "╚══════════════════════════════════════╝"
-echo ""
-
-# Check workspace
-if [ -d "/workspace/.git" ]; then
-    echo "  ✅ Workspace: /workspace (git repo)"
-else
-    echo "  ⚠️  Workspace: /workspace (not a git repo — mount your project)"
-fi
-
-# Check tools
-for tool in git gh glab jq curl kubectl; do
-    if command -v "$tool" &>/dev/null; then
-        echo "  ✅ $tool: $(command -v "$tool")"
-    else
-        echo "  ❌ $tool: not found"
-    fi
-done
-
-echo ""
-
-# Check tokens (presence only, not values)
-for var in GITHUB_TOKEN GITLAB_TOKEN JIRA_API_TOKEN; do
-    if [ -n "${!var}" ]; then
-        echo "  ✅ $var: set"
-    else
-        echo "  ⚠️  $var: not set (optional)"
-    fi
-done
-
-echo ""
-
-# Start OpenClaw if available, otherwise keep container running
-if command -v openclaw &>/dev/null; then
-    echo "Starting OpenClaw gateway..."
-    exec openclaw start --workspace "$OPENCLAW_WORKSPACE" "$@"
-else
-    echo "OpenClaw not found — running in standalone mode."
-    echo "Mount OpenClaw or install it: npm install -g openclaw"
-    echo "Container will stay alive for debugging."
-    exec tail -f /dev/null
-fi
-ENTRYPOINT_SCRIPT
-
-RUN chmod +x /app/entrypoint.sh
-
-ENTRYPOINT ["/app/entrypoint.sh"]
+# ── Entrypoint ──────────────────────────────────────────────
+RUN chmod +x /app/setup/entrypoint.sh
+ENTRYPOINT ["/app/setup/entrypoint.sh"]

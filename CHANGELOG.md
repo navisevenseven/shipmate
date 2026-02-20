@@ -5,6 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-02-20
+
+### Added
+
+- **Auto-config layer** (`setup/auto-config.js`)
+  - Generates `openclaw.json` from env vars at every container start
+  - Security policy hardcoded (tools.deny, elevated, sandbox whitelist)
+  - Validates manual configs against security invariants
+  - Multi-channel support: Telegram (1 token), Slack (2 tokens), Discord (token + guilds)
+  - Multi-LLM: Anthropic Claude / OpenAI GPT
+  - `SHIPMATE_REPOS` with wildcard rejection
+
+- **Unit tests** for auto-config (`setup/auto-config.test.js`)
+  - 40 tests covering repos, channels, models, security invariants, manual config validation
+  - Zero dependencies — uses `node:test` runner
+
+- **Interactive wizard** (`setup/wizard.sh`)
+  - Guided setup: repo → platform token → chat channel → LLM → optional Jira
+  - Token validation via API calls
+  - Modes: interactive, `--non-interactive --env-file`, `--reset`, `--migrate`
+  - Backward compat: `SHIPMATE_REPO` (singular) still works
+
+- **AI-Agent guided onboarding**
+  - `docs/agent-setup-guide.md` — self-contained runbook for AI IDE agents
+  - `docs/agent-config-snippet.md` — minimal block for user's `.cursorrules` / `CLAUDE.md`
+
+- **Deploy to Railway button** in README
+- **OpenClaw config reference** (`docs/openclaw-config-reference.md`)
+- **Quick start guide** (`docs/quick-start.md`) — all 4 onboarding paths + upgrade guide
+
+### Changed
+
+- **Onboarding simplified** — from ~30 min / 8 steps to ~5 min / 3 steps (Railway path)
+- **Entrypoint** — extracted to `setup/entrypoint.sh`, runs auto-config.js before OpenClaw gateway
+- **OpenClaw command** — changed from `openclaw start` to `openclaw gateway --port`
+- **OpenClaw version** — pinned to `0.12.0` (was `latest`)
+- **Dockerfile** — healthcheck now checks actual OpenClaw `/health` endpoint via curl
+- **docker-compose.yml** — `env_file: .env` (was `.env.scoped`), fixed port mapping `3177:18789`
+- **railway.json** — healthcheck `/health` with 60s timeout, updated start command
+- **.env.example** — restructured: REQUIRED (4 vars) first, OPTIONAL below
+- **README.md** — rewritten with 4 onboarding paths, Deploy button, compact format
+- **docs/security.md** — added auto-config security guarantees section
+- **CONTRIBUTING.md** — updated dev setup instructions
+
+### Removed
+
+- `setup/openclaw.json.template` — replaced by `auto-config.js`
+- `setup/generate-scoped-env.sh` — env filtering now in `auto-config.js`
+- `.env.scoped` flow — `.env` used directly
+- `railway.toml` — only `railway.json` kept
+
 ## [0.4.0] - 2026-02-19
 
 ### Added

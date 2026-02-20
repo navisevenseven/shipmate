@@ -41,11 +41,25 @@ jobs:
             echo "OK: $f"
           done
 
-      - name: Verify install.sh is executable
-        run: test -x setup/install.sh
+      - name: Verify shell scripts are executable
+        run: |
+          test -x setup/install.sh
+          test -x setup/verify.sh
+          test -x setup/wizard.sh
+          test -x setup/entrypoint.sh
 
-      - name: Verify verify.sh is executable
-        run: test -x setup/verify.sh
+  auto-config-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run auto-config unit tests
+        run: node --test setup/auto-config.test.js
 
   plugin-typecheck:
     runs-on: ubuntu-latest

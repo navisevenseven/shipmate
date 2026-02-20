@@ -1,9 +1,9 @@
-# ShipMate — Docker Compose for local dog-fooding
+# ShipMate — Docker Compose
 #
 # Usage:
-#   1. Copy .env.example to .env and fill in your tokens
-#   2. Set SHIPMATE_WORKSPACE to your target project path
-#   3. docker compose up
+#   1. Copy .env.example to .env and fill in required values (4 vars)
+#   2. docker compose up -d
+#   3. Add bot to your chat group
 #
 # For sandbox-only mode (OpenClaw runs on host, sandbox in container):
 #   docker compose up sandbox
@@ -19,13 +19,13 @@ services:
     volumes:
       - ${SHIPMATE_WORKSPACE:-.}:/workspace:rw
     env_file:
-      - .env.scoped
+      - .env
     environment:
       - OPENCLAW_WORKSPACE=/workspace
     ports:
-      - "${SHIPMATE_PORT:-3177}:3177"
+      - "${SHIPMATE_PORT:-3177}:${OPENCLAW_GATEWAY_PORT:-18789}"
     healthcheck:
-      test: ["CMD", "node", "-e", "console.log('ok')"]
+      test: ["CMD", "curl", "-sf", "http://localhost:${OPENCLAW_GATEWAY_PORT:-18789}/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -42,8 +42,7 @@ services:
       - ${SHIPMATE_WORKSPACE:-.}:/workspace:rw
       - ${SHIPMATE_KUBE_CONFIG:-/dev/null}:/home/shipmate/.kube/config:ro
     env_file:
-      - .env.scoped
-    # Keep container running — OpenClaw connects via docker exec
+      - .env
     stdin_open: true
     tty: true
     profiles:

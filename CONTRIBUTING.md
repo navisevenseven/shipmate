@@ -20,10 +20,12 @@ Thank you for your interest in contributing to ShipMate! This document outlines 
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feat/description`
-3. Make your changes following the code standards below
-4. Commit with GPG signature: `git commit -S -m "feat: description"`
-5. Push and create a Pull Request
-6. Wait for review and CI checks
+3. Set up dev environment: `./setup/wizard.sh` (or copy `.env.example` → `.env`)
+4. Make your changes following the code standards below
+5. Run tests: `node --test setup/auto-config.test.js`
+6. Commit with GPG signature: `git commit -S -m "feat: description"`
+7. Push and create a Pull Request
+8. Wait for review and CI checks
 
 ## Code Standards
 

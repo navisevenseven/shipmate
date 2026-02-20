@@ -221,6 +221,21 @@ Permissions:
 
 ---
 
+## Auto-Config Security Guarantees (v0.5.0+)
+
+Starting from v0.5.0, `setup/auto-config.js` generates `openclaw.json` from env vars at every container start. Security policy is **hardcoded in JavaScript**, not in a template:
+
+- `tools.deny` always includes `group:fs`, `group:ui`, `group:nodes`, `group:automation`
+- `tools.elevated.enabled` is always `false`
+- Sandbox env whitelist is fixed (no `DATABASE_URL`, `AWS_*`, `REDIS_URL`)
+- `SHIPMATE_REPOS` rejects wildcards (`*`, `owner/*`)
+
+When `SHIPMATE_MANUAL_CONFIG=true`, auto-config validates the existing config against these invariants and exits with error if violated.
+
+`SHIPMATE_DISABLE_SANDBOX=true` is the only way to disable sandbox — it requires explicit opt-in and logs a warning.
+
+---
+
 ## Setup: Enforcement
 
 ShipMate проверяет изоляцию при setup и **отказывается регистрировать tools** при небезопасной конфигурации.
@@ -301,7 +316,7 @@ sha256sum -c CHECKSUMS.txt
 - [ ] Sandbox mode включён в `openclaw.json`
 - [ ] `group:fs` в deny list tool policy
 - [ ] `elevated.enabled: false`
-- [ ] `.env.scoped` сгенерирован (не `.env` напрямую в sandbox)
+- [ ] auto-config.js validates security invariants at startup
 - [ ] Нет секретов в workspace файлах
 - [ ] `groupPolicy: "allowlist"` в Telegram/Slack/Discord
 - [ ] `requireMention: true` для группы

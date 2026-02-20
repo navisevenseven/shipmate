@@ -68,6 +68,10 @@ echo ""
 echo "╔══════════════════════════════════════╗"
 echo "║   🚢 ShipMate — Installation Setup  ║"
 echo "╚══════════════════════════════════════╝"
+echo ""
+warn "DEPRECATED: install.sh is deprecated since v0.5.0."
+info "Use setup/wizard.sh for interactive setup, or .env + auto-config.js for Docker/Railway."
+echo ""
 
 # ── Step 1: Validate workspace ────────────────────────────────
 header "Step 1: Validate workspace"
@@ -310,20 +314,24 @@ elif [[ -f "$TEMPLATE" ]]; then
   ok "Config generated: $CONFIG_FILE"
   info "Fill in your tokens in $CONFIG_FILE (or use .env)"
 elif [[ ! -f "$TEMPLATE" ]]; then
-  fail "Template not found: $TEMPLATE"
+  info "Template removed in v0.5.0. Use setup/wizard.sh or auto-config.js instead."
 fi
 
 # ── Step 7: Generate .env.scoped ────────────────────────────────
 header "Step 7: Generate .env.scoped"
 
-if [[ -f "$WORKSPACE/.env" ]]; then
-  if (cd "$WORKSPACE" && "$PROJECT_DIR/setup/generate-scoped-env.sh" --input .env --output .env.scoped 2>/dev/null); then
-    ok ".env.scoped generated from $WORKSPACE/.env"
+if [[ -f "$PROJECT_DIR/setup/generate-scoped-env.sh" ]]; then
+  if [[ -f "$WORKSPACE/.env" ]]; then
+    if (cd "$WORKSPACE" && "$PROJECT_DIR/setup/generate-scoped-env.sh" --input .env --output .env.scoped 2>/dev/null); then
+      ok ".env.scoped generated from $WORKSPACE/.env"
+    else
+      warn "generate-scoped-env.sh failed or .env.scoped not created"
+    fi
   else
-    warn "generate-scoped-env.sh failed or .env.scoped not created"
+    info "No $WORKSPACE/.env — skip .env.scoped (create .env and re-run to generate)"
   fi
 else
-  info "No $WORKSPACE/.env — skip .env.scoped (create .env and re-run to generate)"
+  info ".env.scoped flow removed in v0.5.0. Use .env directly with auto-config.js."
 fi
 
 # ── Step 8: Docker check ───────────────────────────────────────

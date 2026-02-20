@@ -300,19 +300,20 @@ if command -v gh &>/dev/null && gh auth status &>/dev/null 2>&1; then
   fi
 fi
 
-# .env.scoped check
-if [[ -f ".env.scoped" ]]; then
-  SCOPED_VAR_COUNT=$(grep -c "=" .env.scoped 2>/dev/null || echo "0")
-  ok ".env.scoped exists ($SCOPED_VAR_COUNT variables)"
+# .env check
+if [[ -f ".env" ]]; then
+  ENV_VAR_COUNT=$(grep -c "=" .env 2>/dev/null || echo "0")
+  ok ".env exists ($ENV_VAR_COUNT variables)"
 
-  # Check for dangerous vars that should NOT be in .env.scoped
   for dangerous_var in DATABASE_URL REDIS_URL AWS_SECRET_ACCESS_KEY; do
-    if grep -q "^${dangerous_var}=" .env.scoped 2>/dev/null; then
-      check_fail ".env.scoped contains $dangerous_var — this should not be in the sandbox!"
+    if grep -q "^${dangerous_var}=" .env 2>/dev/null; then
+      check_fail ".env contains $dangerous_var — remove it (auto-config.js handles env filtering)"
     fi
   done
+elif [[ -f ".env.scoped" ]]; then
+  info ".env.scoped found (legacy v0.4.x). Consider migrating: wizard.sh --migrate"
 else
-  warn ".env.scoped not found — run setup/generate-scoped-env.sh"
+  warn ".env not found — create from .env.example or run setup/wizard.sh"
 fi
 
 # Docker / Sandbox check
