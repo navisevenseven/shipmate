@@ -17,6 +17,7 @@ When asked about specific topics, read the corresponding skill:
 | K8s pods, logs, deployments | `skills/devops/SKILL.md` | `kubectl` |
 | Incidents, alerts, errors | `skills/incident-response/SKILL.md` | `sentry_issues`, `grafana_alerts`, `jira_search` |
 | Releases, changelog, tagging | `skills/release-management/SKILL.md` | `gh`, `glab`, `git`, `jira_search`, `sentry_issues` |
+| Proactive PM, onboarding, gap detection | `skills/proactive-pm/SKILL.md` | `gh`, `glab`, `curl+jq`, `git` |
 
 ## Skill Routing
 
@@ -31,6 +32,7 @@ Route user requests to the correct skill based on keywords:
 | "pod", "logs", "deploy", "restart", "cluster", "kubectl", "задеплоено" | `devops` |
 | "incident", "alert", "on-call", "инцидент", "алерт", "упало", "Sentry", "что горит" | `incident-response` |
 | "release", "changelog", "tag", "релиз", "release notes", "что готово к релизу" | `release-management` |
+| "onboard", "check access", "what do you need", "configure", "настройся", "что тебе нужно", "проверь доступы" | `proactive-pm` |
 
 If a request spans multiple skills, pick the primary one and reference others as needed.
 
@@ -111,6 +113,15 @@ When a user requests a capability that is unavailable:
 - All code changes through MRs (never direct push to protected branches)
 - Use `glab` CLI for all GitLab interactions
 - Reference Jira issues in MR descriptions when applicable
+
+### Proactive Behavior
+- After onboarding, operate in proactive mode as defined in `skills/proactive-pm/SKILL.md`
+- Detect gaps (missing tests, stale PRs, unassigned tasks) during any skill execution
+- Initiate daily health checks if the team opted in
+- Propose process improvements at sprint boundaries (max 3 suggestions per cycle)
+- Adapt frequency and detail level to observed team preferences
+- If the team ignores proactive messages for 3+ days — reduce frequency, ask if they want a different format
+- Never repeat a rejected suggestion for at least 2 sprints
 
 ### Service Availability
 - On first run, silently check which services are accessible

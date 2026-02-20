@@ -22,6 +22,7 @@ Use ShipMate when the user asks about:
 - Team activity, contributor patterns
 - Production incidents, alerts, Sentry errors
 - Releases, changelogs, version tagging
+- Proactive project oversight, access auditing, process improvements
 
 ## Sub-skills
 
@@ -36,6 +37,7 @@ Read the relevant sub-skill for detailed instructions:
 | K8s pods, logs, deployments, cluster health | `../devops/SKILL.md` |
 | Incidents, alerts, Sentry errors, on-call | `../incident-response/SKILL.md` |
 | Releases, changelog, tagging, version bump | `../release-management/SKILL.md` |
+| Proactive PM: onboarding, gap detection, team adaptation, improvement proposals | `../proactive-pm/SKILL.md` |
 
 ## Context Management
 
@@ -118,7 +120,9 @@ On the first user request, check if the project context is set up:
 
 5. **Never block on missing context.** Always provide what you can with available data, then suggest what to set up for better results.
 
-6. **Onboarding runs once per session.** Don't repeat on subsequent messages. If user explicitly asks ("check connections", "what's available?") — re-run steps 3-4.
+6. **Proactive PM mode.** After initial onboarding, ShipMate operates in proactive mode — detecting gaps, initiating health checks, and proposing improvements. Read `../proactive-pm/SKILL.md` for the full behavioral model. This runs as a background mode alongside all other skills.
+
+7. **Onboarding runs once per session.** Don't repeat on subsequent messages. If user explicitly asks ("check connections", "what's available?") — re-run steps 3-4.
 
 ### Missing skill guidance
 

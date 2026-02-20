@@ -33,8 +33,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Pre-release checklist: open PRs, CI status, Jira blockers, Sentry errors
   - Release commands for GitHub and GitLab
 
+- **Proactive PM skill** (`skills/proactive-pm/SKILL.md`)
+  - 4-phase behavioral model: deep onboarding, rhythm establishment, proactive actions, escalation
+  - Daily health checks, gap detection, team adaptation, improvement proposals
+  - Persistence model for team preferences and observations
+
 ### Changed
 
+- `bootstrap/SOUL.md` — added proactive mindset section and post-onboarding transition
+- `bootstrap/AGENTS.md` — proactive-pm routing and Proactive Behavior rules
+- `skills/shipmate/SKILL.md` — proactive-pm sub-skill and onboarding step 6
 - `plugin/lib/types.ts` — added `SentryIssue`, `SentryEvent`, `GrafanaAlert`, `GrafanaAnnotation` interfaces and `ALERTS` TTL
 - `plugin/lib/scope-guard.ts` — added `checkSentry()`, `hasSentryScope`, Sentry org/project scoping
 - `plugin/index.ts` — Sentry and Grafana tool registration blocks (fail-closed pattern)
