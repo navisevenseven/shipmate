@@ -61,8 +61,8 @@ RUN ARCH=$(dpkg --print-architecture) \
 # outside the sandbox — never give the agent direct DB credentials.
 
 # ── Non-root user ────────────────────────────────────────────
-RUN groupadd -g 1000 shipmate \
-    && useradd -u 1000 -g shipmate -m -s /bin/bash shipmate
+RUN (groupadd -g 1000 shipmate 2>/dev/null || true) \
+    && (useradd -u 1000 -g 1000 -m -s /bin/bash shipmate 2>/dev/null || true)
 
 # ── Workspace directory (OpenClaw mounts the project here) ───
 RUN mkdir -p /workspace && chown shipmate:shipmate /workspace
