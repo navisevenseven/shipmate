@@ -13,6 +13,8 @@ export interface ScopeConfig {
   gitlabProjects?: string;
   jiraProjects?: string;
   jiraBoards?: string;
+  sentryOrg?: string;
+  sentryProject?: string;
 }
 
 export class ScopeGuard {
@@ -20,12 +22,16 @@ export class ScopeGuard {
   private glProjects: Set<string>;
   private jiraProjects: Set<string>;
   private jiraBoards: Set<number>;
+  private _sentryOrg: string | null;
+  private _sentryProject: string | null;
 
   constructor(config: ScopeConfig) {
     this.ghRepos = parseStringList(config.githubRepos);
     this.glProjects = parseStringList(config.gitlabProjects);
     this.jiraProjects = parseStringList(config.jiraProjects, false);
     this.jiraBoards = parseNumberList(config.jiraBoards);
+    this._sentryOrg = config.sentryOrg?.trim() || null;
+    this._sentryProject = config.sentryProject?.trim() || null;
 
     if (this.ghRepos.size > 0) {
       logger.info("scope-guard", "GitHub repos", [...this.ghRepos].join(", "));
@@ -38,6 +44,9 @@ export class ScopeGuard {
     }
     if (this.jiraBoards.size > 0) {
       logger.info("scope-guard", "Jira boards", [...this.jiraBoards].join(", "));
+    }
+    if (this._sentryOrg && this._sentryProject) {
+      logger.info("scope-guard", "Sentry", `${this._sentryOrg}/${this._sentryProject}`);
     }
   }
 
@@ -96,6 +105,34 @@ export class ScopeGuard {
 
   get hasJiraScope(): boolean {
     return this.jiraProjects.size > 0;
+  }
+
+  /**
+   * Validate Sentry org/project access. Throws on violation.
+   */
+  checkSentry(org: string, project: string): void {
+    if (!this._sentryOrg || !this._sentryProject) {
+      throw new ScopeViolationError("sentry", `${org}/${project}`, []);
+    }
+    if (org !== this._sentryOrg || project !== this._sentryProject) {
+      throw new ScopeViolationError(
+        "sentry",
+        `${org}/${project}`,
+        [`${this._sentryOrg}/${this._sentryProject}`],
+      );
+    }
+  }
+
+  get hasSentryScope(): boolean {
+    return this._sentryOrg !== null && this._sentryProject !== null;
+  }
+
+  get sentryOrg(): string | null {
+    return this._sentryOrg;
+  }
+
+  get sentryProject(): string | null {
+    return this._sentryProject;
   }
 }
 

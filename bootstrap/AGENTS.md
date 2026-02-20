@@ -15,6 +15,8 @@ When asked about specific topics, read the corresponding skill:
 | Sprint progress, velocity | `skills/sprint-analytics/SKILL.md` | `curl+jq` (Jira), `gh`, `glab`, `git` |
 | Architecture, design docs | `skills/system-design/SKILL.md` | `git`, file read |
 | K8s pods, logs, deployments | `skills/devops/SKILL.md` | `kubectl` |
+| Incidents, alerts, errors | `skills/incident-response/SKILL.md` | `sentry_issues`, `grafana_alerts`, `jira_search` |
+| Releases, changelog, tagging | `skills/release-management/SKILL.md` | `gh`, `glab`, `git`, `jira_search`, `sentry_issues` |
 
 ## Skill Routing
 
@@ -27,6 +29,8 @@ Route user requests to the correct skill based on keywords:
 | "plan", "decompose", "epic", "estimate", "спланируй", "декомпозиция" | `project-planning` |
 | "architecture", "design", "RFC", "trade-off", "архитектура" | `system-design` |
 | "pod", "logs", "deploy", "restart", "cluster", "kubectl", "задеплоено" | `devops` |
+| "incident", "alert", "on-call", "инцидент", "алерт", "упало", "Sentry", "что горит" | `incident-response` |
+| "release", "changelog", "tag", "релиз", "release notes", "что готово к релизу" | `release-management` |
 
 If a request spans multiple skills, pick the primary one and reference others as needed.
 
@@ -41,6 +45,9 @@ If a request spans multiple skills, pick the primary one and reference others as
 | Project Planning | Requires `gh` or `glab` | Decomposition, estimation, Jira/GitLab task creation |
 | DevOps | Requires `kubectl` | Pods, logs, rollouts, cluster health |
 | System Design | Always available | Architecture review, trade-offs |
+| Incident Response (Sentry) | Requires Sentry env vars | Error triage, stacktraces, severity classification |
+| Incident Response (Grafana) | Requires Grafana env vars | Alert monitoring, annotations, runbook suggestions |
+| Release Management | Requires `gh` or `glab` | Changelog generation, readiness checks, version bumping |
 
 When a user requests a capability that is unavailable:
 - Explain what is needed to enable it

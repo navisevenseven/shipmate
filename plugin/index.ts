@@ -24,12 +24,16 @@ import type { PluginAPI } from "./lib/types.js";
 import { GitHubClient } from "./clients/github.js";
 import { GitLabClient } from "./clients/gitlab.js";
 import { JiraClient } from "./clients/jira.js";
+import { SentryClient } from "./clients/sentry.js";
+import { GrafanaClient } from "./clients/grafana.js";
 
 import { registerGithubPrReview } from "./tools/github-pr-review.js";
 import { registerGithubTeamStats } from "./tools/github-team-stats.js";
 import { registerGitlabMrReview } from "./tools/gitlab-mr-review.js";
 import { registerSprintMetrics } from "./tools/sprint-metrics.js";
 import { registerJiraSearch } from "./tools/jira-search.js";
+import { registerSentryIssues } from "./tools/sentry-issues.js";
+import { registerGrafanaAlerts } from "./tools/grafana-alerts.js";
 
 export default function register(api: PluginAPI): void {
   const cache = new Cache();
@@ -40,6 +44,8 @@ export default function register(api: PluginAPI): void {
     gitlabProjects: process.env.SHIPMATE_SCOPE_GITLAB_PROJECTS,
     jiraProjects: process.env.SHIPMATE_SCOPE_JIRA_PROJECTS,
     jiraBoards: process.env.SHIPMATE_SCOPE_JIRA_BOARDS,
+    sentryOrg: process.env.SENTRY_ORG,
+    sentryProject: process.env.SENTRY_PROJECT,
   });
 
   let toolsRegistered = 0;
@@ -128,5 +134,52 @@ export default function register(api: PluginAPI): void {
     logger.warn("plugin", "skipped sprint_metrics", "no data sources configured");
   }
 
-  logger.info("plugin", "loaded", `ShipMate v0.4.0 — ${toolsRegistered} tools registered`);
+  // --- Sentry tools (fail-closed: url + token + org required) ---
+  const sentryUrl = process.env.SENTRY_URL;
+  const sentryToken = process.env.SENTRY_AUTH_TOKEN;
+  const sentryOrg = process.env.SENTRY_ORG;
+  const sentryProject = process.env.SENTRY_PROJECT;
+
+  if (sentryUrl && sentryToken && sentryOrg && sentryProject && guard.hasSentryScope) {
+    const sentryClient = new SentryClient(
+      { url: sentryUrl, token: sentryToken, org: sentryOrg, project: sentryProject },
+      cache,
+      limiter,
+      guard,
+    );
+    registerSentryIssues(api, sentryClient);
+    toolsRegistered += 1;
+    logger.info("plugin", "registered", "sentry_issues");
+  } else if (sentryUrl && sentryToken && sentryOrg && !sentryProject) {
+    logger.error("plugin", "BLOCKED",
+      "Sentry credentials set but SENTRY_PROJECT is empty — Sentry tools disabled. " +
+      "Set SENTRY_PROJECT to enable.");
+  } else if (!sentryUrl && !sentryToken) {
+    logger.warn("plugin", "skipped Sentry tools", "SENTRY_URL / SENTRY_AUTH_TOKEN not set");
+  }
+
+  // --- Grafana tools (fail-closed: url + token required) ---
+  const grafanaUrl = process.env.GRAFANA_URL;
+  const grafanaToken = process.env.GRAFANA_TOKEN;
+
+  if (grafanaUrl && grafanaToken) {
+    const grafanaClient = new GrafanaClient(
+      { url: grafanaUrl, token: grafanaToken },
+      cache,
+      limiter,
+    );
+    registerGrafanaAlerts(api, grafanaClient);
+    toolsRegistered += 1;
+    logger.info("plugin", "registered", "grafana_alerts");
+  } else {
+    const missing = [
+      !grafanaUrl && "GRAFANA_URL",
+      !grafanaToken && "GRAFANA_TOKEN",
+    ].filter(Boolean);
+    if (missing.length > 0) {
+      logger.warn("plugin", "skipped Grafana tools", `missing: ${missing.join(", ")}`);
+    }
+  }
+
+  logger.info("plugin", "loaded", `ShipMate v0.5.0 — ${toolsRegistered} tools registered`);
 }

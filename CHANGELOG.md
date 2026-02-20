@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-02-20
+
+### Added
+
+- **Sentry integration** (`plugin/clients/sentry.ts`, `plugin/tools/sentry-issues.ts`)
+  - REST API client for Sentry Issues API v0
+  - `sentry_issues` tool: fetch unresolved issues, details with stacktrace, filter by level/time
+  - ScopeGuard enforcement for Sentry org/project
+  - Cached (2-min TTL) and rate-limited
+
+- **Grafana integration** (`plugin/clients/grafana.ts`, `plugin/tools/grafana-alerts.ts`)
+  - REST API client for Grafana Alerting API (Unified Alerting)
+  - `grafana_alerts` tool: active alerts, alert rules, dashboard annotations
+  - Three modes: alerts (default), rules, annotations
+  - Cached (2-min TTL) and rate-limited
+
+- **Incident Response skill** (`skills/incident-response/SKILL.md`)
+  - Automated severity classification (P1-P4) from Sentry + Grafana data
+  - Runbook suggestions based on error patterns
+  - Duplicate incident detection via Jira search
+  - Post-mortem template generation for P1/P2 incidents
+
+- **Release Management skill** (`skills/release-management/SKILL.md`)
+  - Changelog generation from merged PRs/MRs in Keep a Changelog format
+  - Semantic version bump detection from PR labels/titles
+  - Pre-release checklist: open PRs, CI status, Jira blockers, Sentry errors
+  - Release commands for GitHub and GitLab
+
+### Changed
+
+- `plugin/lib/types.ts` — added `SentryIssue`, `SentryEvent`, `GrafanaAlert`, `GrafanaAnnotation` interfaces and `ALERTS` TTL
+- `plugin/lib/scope-guard.ts` — added `checkSentry()`, `hasSentryScope`, Sentry org/project scoping
+- `plugin/index.ts` — Sentry and Grafana tool registration blocks (fail-closed pattern)
+- `setup/auto-config.js` — Sentry/Grafana env vars added to sandbox whitelist
+- `bootstrap/AGENTS.md` — routing tables updated with incident-response and release-management
+- `skills/shipmate/SKILL.md` — sub-skill table and onboarding updated
+- `plugin/openclaw.plugin.json` — version bumped to 0.4.0
+
 ## [0.5.0] - 2026-02-20
 
 ### Added

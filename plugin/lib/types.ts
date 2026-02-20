@@ -14,6 +14,8 @@ export const CacheTTL = {
   STATS: 30 * 60 * 1000,
   /** Sprint metrics */
   SPRINT: 5 * 60 * 1000,
+  /** Alerts and errors — change frequently */
+  ALERTS: 2 * 60 * 1000,
 } as const;
 
 /** OpenClaw plugin API (minimal typing for what we use) */
@@ -138,6 +140,94 @@ export interface ContributorStats {
   additions: number;
   deletions: number;
   avg_merge_time_hours: number;
+}
+
+/** Sentry issue (grouped error) */
+export interface SentryIssue {
+  id: string;
+  title: string;
+  culprit: string;
+  level: string;
+  status: string;
+  count: string;
+  first_seen: string;
+  last_seen: string;
+  short_id: string;
+  permalink: string;
+  metadata: {
+    type?: string;
+    value?: string;
+    filename?: string;
+    function?: string;
+  };
+  tags: Array<{ key: string; value: string }>;
+}
+
+/** Sentry event (single occurrence of an issue) */
+export interface SentryEvent {
+  event_id: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  tags: Array<{ key: string; value: string }>;
+  context: Record<string, unknown>;
+  stacktrace: {
+    frames: Array<{
+      filename: string;
+      function: string;
+      lineno: number | null;
+      context_line: string | null;
+    }>;
+  } | null;
+}
+
+/** Sentry issues list result */
+export interface SentryIssuesResult {
+  project: string;
+  org: string;
+  total: number;
+  issues: SentryIssue[];
+}
+
+/** Grafana alert instance */
+export interface GrafanaAlert {
+  labels: Record<string, string>;
+  annotations: Record<string, string>;
+  state: string;
+  activeAt: string;
+  value: string;
+  silencedBy: string[];
+  inhibitedBy: string[];
+}
+
+/** Grafana alert rule */
+export interface GrafanaAlertRule {
+  uid: string;
+  title: string;
+  condition: string;
+  folder_title: string;
+  state: string;
+  health: string;
+  last_evaluation: string;
+  evaluation_duration: string;
+}
+
+/** Grafana alerts result */
+export interface GrafanaAlertsResult {
+  source: string;
+  total: number;
+  alerts: GrafanaAlert[];
+}
+
+/** Grafana annotation */
+export interface GrafanaAnnotation {
+  id: number;
+  dashboard_uid: string;
+  panel_id: number;
+  text: string;
+  tags: string[];
+  time: number;
+  time_end: number;
 }
 
 /** Jira search result */

@@ -20,6 +20,8 @@ Use ShipMate when the user asks about:
 - Test strategy, coverage
 - Task assignment, workload
 - Team activity, contributor patterns
+- Production incidents, alerts, Sentry errors
+- Releases, changelogs, version tagging
 
 ## Sub-skills
 
@@ -32,6 +34,8 @@ Read the relevant sub-skill for detailed instructions:
 | Sprint metrics, progress, blockers | `../sprint-analytics/SKILL.md` |
 | Architecture, design docs, trade-offs | `../system-design/SKILL.md` |
 | K8s pods, logs, deployments, cluster health | `../devops/SKILL.md` |
+| Incidents, alerts, Sentry errors, on-call | `../incident-response/SKILL.md` |
+| Releases, changelog, tagging, version bump | `../release-management/SKILL.md` |
 
 ## Context Management
 
@@ -95,7 +99,11 @@ On the first user request, check if the project context is set up:
    ✅ sprint-analytics (Jira + GitLab)
    ✅ system-design
    ❌ devops (kubectl not found — install for K8s visibility)
+   ✅ incident-response (Sentry + Grafana)
+   ✅ release-management (GitHub/GitLab + Jira)
    ⚠️ Jira: not configured (fill JIRA_* in openclaw.json for full sprint data)
+   ⚠️ Sentry: not configured (fill SENTRY_* for error tracking)
+   ⚠️ Grafana: not configured (fill GRAFANA_* for alert monitoring)
    ```
 
    If services fail, suggest how to fix:
