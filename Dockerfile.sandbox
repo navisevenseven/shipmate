@@ -61,14 +61,14 @@ RUN ARCH=$(dpkg --print-architecture) \
 # outside the sandbox — never give the agent direct DB credentials.
 
 # ── Non-root user ────────────────────────────────────────────
-RUN (groupadd -g 1000 shipmate 2>/dev/null || true) \
-    && (useradd -u 1000 -g 1000 -m -s /bin/bash shipmate 2>/dev/null || true)
+# node:20-slim already has user "node" with UID/GID 1000.
+# Reuse it instead of creating "shipmate" to avoid conflicts.
 
 # ── Workspace directory (OpenClaw mounts the project here) ───
-RUN mkdir -p /workspace && chown shipmate:shipmate /workspace
+RUN mkdir -p /workspace && chown 1000:1000 /workspace
 WORKDIR /workspace
 
-USER shipmate
+USER 1000
 
 # ── Healthcheck ──────────────────────────────────────────────
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
