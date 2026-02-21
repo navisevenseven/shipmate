@@ -106,6 +106,7 @@ For each task provide:
 - Don't create tasks larger than XL (5d) — they need further decomposition
 - Always include a "testing" task for non-trivial features
 - Always include a "documentation" task if the feature changes API/behavior
+- Always include a "DB migration review" task if the feature involves database changes (→ `../database-ops/SKILL.md` for safety checklist)
 - Always confirm with user before creating tasks in external systems
 - Get JIRA_PROJECT_KEY from `data/team-context.md` or ask the user
 

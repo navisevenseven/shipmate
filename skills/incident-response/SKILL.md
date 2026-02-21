@@ -59,6 +59,11 @@ Collect information from all available sources in parallel:
 1. **Sentry** — `sentry_issues` with `time_range=1h` (recent errors first)
 2. **Grafana** — `grafana_alerts` with `state=firing` (active alerts)
 3. **Jira** — `jira_search` with query `type = Bug AND status != Done AND priority in (Highest, High)` (existing incidents)
+4. **CI/CD** — check pipeline status on main/master (see `../devops-cicd/SKILL.md` for commands):
+   ```bash
+   # GitHub: recent runs on main
+   gh run list --branch main --limit 5 --json conclusion,name,createdAt --jq '.[] | {name, conclusion, created: .createdAt}'
+   ```
 
 If a source is unavailable, note it and continue with what's accessible.
 
@@ -69,13 +74,14 @@ Based on collected data, classify the incident:
 | Severity | Criteria | Response |
 |----------|----------|----------|
 | **P1 — Critical** | Production down, revenue impact, data loss, >50% users affected | Immediate response, all hands, status page update |
-| **P2 — Major** | Degraded performance, partial outage, key feature broken, error rate spike >5x | 30-min response, on-call + team lead |
-| **P3 — Minor** | Isolated errors, non-critical feature affected, single user reports | 4-hour response, next business day fix |
+| **P2 — Major** | Degraded performance, partial outage, key feature broken, error rate spike >5x, CI/CD red on main >2h (daily deploy cadence) | 30-min response, on-call + team lead |
+| **P3 — Minor** | Isolated errors, non-critical feature affected, single user reports, CI/CD red on main >2h (weekly deploy cadence) | 4-hour response, next business day fix |
 | **P4 — Warning** | Warning-level alerts, minor anomalies, trend changes | Monitor, address in next sprint |
 
 **Classification signals:**
 - Sentry: error count spike, new error types, fatal level errors
 - Grafana: firing alerts count, alert duration, affected services
+- CI/CD: red on main branch, blocked deployments. Severity depends on deploy frequency — check `data/team-context.md` or `../devops-cicd/SKILL.md` DORA metrics
 - Error rate vs baseline (if `data/team-context.md` has baseline metrics)
 
 ### 3. Suggest response actions
@@ -91,6 +97,7 @@ Based on severity and error patterns, suggest a runbook:
 | 5xx spike on specific endpoint | Check recent deployments, review latest merged PRs for that service, check downstream deps |
 | Auth/token errors | Check token expiry, verify secrets rotation, check identity provider status |
 | Queue backlog growing | Check consumer pods, check for stuck jobs, scale consumers |
+| CI/CD red on main | Check latest failed run (`../devops-cicd/SKILL.md`), identify failing job, check if recent merge caused it, check if flaky test |
 
 ### 4. Check for duplicates
 

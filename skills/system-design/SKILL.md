@@ -96,9 +96,14 @@ For each architectural decision, present:
 
 #### Data Model
 <Schema changes, new tables/collections>
+→ For migration safety review: `../database-ops/SKILL.md`
 
 #### API Changes
 <New endpoints, modified contracts>
+
+#### Security Considerations
+<Authentication, authorization, data protection, input validation>
+→ For dependency/secret audit: `../security-awareness/SKILL.md`
 
 #### Migration Strategy
 <How to get from current to proposed state>
@@ -124,3 +129,5 @@ For each architectural decision, present:
 - Include failure modes: what happens when X goes down?
 - Keep ASCII diagrams simple and readable
 - If the decision is reversible — say so (reduces decision anxiety)
+- For designs with new DB schemas: evaluate migrations using `../database-ops/SKILL.md` safety checklist
+- For security-sensitive designs: include OWASP considerations from `../security-awareness/SKILL.md`

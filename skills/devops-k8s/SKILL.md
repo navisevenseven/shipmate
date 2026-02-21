@@ -1,8 +1,8 @@
 ---
-name: shipmate-devops
+name: shipmate-devops-k8s
 description: "Kubernetes cluster monitoring, pod status, log retrieval, deployment management, and cluster health checks."
 metadata:
-  { "openclaw": { "emoji": "🚀", "requires": { "bins": ["kubectl"] } } }
+  { "openclaw": { "emoji": "☸️", "requires": { "bins": ["kubectl"] } } }
 ---
 
 # DevOps — Kubernetes Operations
@@ -12,8 +12,20 @@ You help development teams monitor Kubernetes clusters, debug pod issues, check 
 ## When to use
 
 - User asks about deployment status, pod health, or what's running in production
-- User says: "что задеплоено?", "pod status", "logs", "restart", "rollout", "cluster health"
-- User wants to debug a failing service or check infrastructure
+- User says: "что задеплоено?", "pod status", "logs", "restart", "rollout", "cluster health", "pods", "kubectl"
+- User wants to debug a failing service or check K8s infrastructure
+
+**Related skills:** For Docker/Compose issues → `../devops-docker/SKILL.md`. For CI/CD pipeline status → `../devops-cicd/SKILL.md`.
+
+## team-context.md Fields
+
+Check `data/team-context.md` for:
+
+```
+## K8s Config
+- default_namespace: <production/staging/default>
+- cluster_name: <cluster identifier>
+```
 
 ## Context Management
 

@@ -16,7 +16,11 @@ Use ShipMate when the user asks about:
 - Reviewing code or PRs
 - Sprint progress, velocity, blockers
 - System design, architecture decisions
-- CI/CD, deployments, infrastructure
+- CI/CD pipelines, build failures, DORA metrics
+- Docker containers, compose services, image issues
+- Kubernetes pods, deployments, cluster health
+- Security audit, dependency vulnerabilities, secret scanning
+- Database migrations, schema review, query performance
 - Test strategy, coverage
 - Task assignment, workload
 - Team activity, contributor patterns
@@ -34,7 +38,11 @@ Read the relevant sub-skill for detailed instructions:
 | PR/MR review, code quality | `../code-review/SKILL.md` |
 | Sprint metrics, progress, blockers | `../sprint-analytics/SKILL.md` |
 | Architecture, design docs, trade-offs | `../system-design/SKILL.md` |
-| K8s pods, logs, deployments, cluster health | `../devops/SKILL.md` |
+| K8s pods, logs, deployments, cluster health | `../devops-k8s/SKILL.md` |
+| CI/CD pipelines, build failures, DORA metrics | `../devops-cicd/SKILL.md` |
+| Docker containers, compose, image debugging | `../devops-docker/SKILL.md` |
+| Security audit, vulnerabilities, secret scan | `../security-awareness/SKILL.md` |
+| Database schema, migrations, query analysis | `../database-ops/SKILL.md` |
 | Incidents, alerts, Sentry errors, on-call | `../incident-response/SKILL.md` |
 | Releases, changelog, tagging, version bump | `../release-management/SKILL.md` |
 | Proactive PM: onboarding, gap detection, team adaptation, improvement proposals | `../proactive-pm/SKILL.md` |
@@ -91,26 +99,35 @@ On the first user request, check if the project context is set up:
    - `glab auth status 2>&1` → GitLab ok/fail
    - `gh auth status 2>&1` → GitHub ok/fail
    - `curl -s -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" "$JIRA_BASE_URL/rest/api/3/myself"` → Jira ok/fail
-   - `kubectl cluster-info 2>&1` → K8s ok/fail (if kubectl exists)
+   - `kubectl cluster-info 2>&1` → K8s ok/fail
+   - `docker --version 2>&1` → Docker ok/fail
+   - `docker compose version 2>&1 || docker-compose --version 2>&1` → Compose ok/fail
+   - `npm audit --help 2>&1 || pip-audit --version 2>&1 || yarn audit --help 2>&1` → Audit tool ok/fail
+   - `gitleaks version 2>&1 || trufflehog --version 2>&1` → Secret scan tool ok/fail
+   - `psql --version 2>&1 || mysql --version 2>&1` → DB client ok/fail
    
    Report available capabilities:
    ```
    Available capabilities:
-   ✅ code-review (GitLab + GitHub)
-   ✅ project-planning (Jira + GitLab)
-   ✅ sprint-analytics (Jira + GitLab)
-   ✅ system-design
-   ❌ devops (kubectl not found — install for K8s visibility)
-   ✅ incident-response (Sentry + Grafana)
-   ✅ release-management (GitHub/GitLab + Jira)
-   ⚠️ Jira: not configured (fill JIRA_* in openclaw.json for full sprint data)
-   ⚠️ Sentry: not configured (fill SENTRY_* for error tracking)
-   ⚠️ Grafana: not configured (fill GRAFANA_* for alert monitoring)
+   [check gh/glab auth] code-review, project-planning, sprint-analytics, release-management
+   [check kubectl]      devops-k8s (K8s cluster monitoring)
+   [check docker]       devops-docker (container operations)
+   [check gh/glab]      devops-cicd (pipeline monitoring, DORA metrics)
+   [check npm/pip-audit] security-awareness (dependency + secret scan)
+   [check psql/mysql]   database-ops — connected mode (Mode B: live DB diagnostics)
+   [always available]   database-ops — file mode (Mode A: migration review from files)
+   [always available]   system-design
+   [check sentry]       incident-response (error tracking)
+   [check grafana]      incident-response (alert monitoring)
    ```
 
    If services fail, suggest how to fix:
    - "GitLab: not authenticated. Run: `glab auth login --hostname <host>`"
    - "Jira: token not set. Fill JIRA_API_TOKEN in openclaw.json"
+   - "K8s: kubectl not found or cluster not configured"
+   - "Docker: not installed or daemon not running"
+   - "Security: install `pip-audit`, `gitleaks`, or `trufflehog` for deeper scans"
+   - "Database: install `psql` or `mysql` for live DB diagnostics (file-based analysis always available)"
 
 4. **Graceful degradation** (when specific data is missing):
    - No milestones → fall back to date-based analysis (`--search "merged:>YYYY-MM-DD"`)
@@ -128,6 +145,11 @@ On the first user request, check if the project context is set up:
 
 If the user asks for a function whose skill is not loaded:
 - "For K8s monitoring, kubectl is required. Install it and restart OpenClaw."
+- "For Docker operations, Docker must be installed and running."
+- "For CI/CD pipeline monitoring, `gh` (GitHub) or `glab` (GitLab) CLI is required."
+- "For dependency vulnerability scanning, install `npm audit` / `pip-audit` / `yarn audit`."
+- "For secret scanning, install `gitleaks` or `trufflehog`. Basic grep-based scan is always available."
+- "For live database diagnostics, install `psql` (Postgres) or `mysql`. Migration file review works without DB client."
 - "For Sentry error tracking, fill SENTRY_* variables in openclaw.json."
 - Never refuse silently — explain what's needed to enable the feature.
 

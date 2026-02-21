@@ -130,6 +130,21 @@ curl -s -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
   jq '.issues[] | {key, summary: .fields.summary, status: .fields.status.name, priority: .fields.priority.name}'
 ```
 
+#### Security check
+
+Run a dependency vulnerability scan before release (→ `../security-awareness/SKILL.md`):
+- No critical vulnerabilities in dependencies (`npm audit` / `pip-audit`)
+- No secrets detected in recent commits
+- If security-awareness skill is unavailable, note the skip in the report
+
+#### Database check
+
+Verify database migration safety (→ `../database-ops/SKILL.md`):
+- All pending migrations reviewed and tested on staging
+- Migrations are backward-compatible (rollback-safe)
+- No destructive operations (DROP TABLE, TRUNCATE) without explicit approval
+- If database-ops skill is unavailable, check migration files manually
+
 #### Error check (Sentry)
 
 If Sentry is configured:
@@ -155,6 +170,8 @@ If Sentry is configured:
 | All PRs merged | ✅/❌ | <N open PRs targeting main> |
 | CI green on main | ✅/❌ | <check names and status> |
 | No P1/P2 blockers | ✅/❌ | <blocker tickets if any> |
+| Security scan clean | ✅/⚠️/❌ | <critical vuln count> |
+| DB migrations safe | ✅/⚠️/❌/— | <migration issues if any> |
 | No fatal Sentry errors | ✅/⚠️/❌ | <fatal count> |
 | No new error types (24h) | ✅/⚠️ | <new error count> |
 

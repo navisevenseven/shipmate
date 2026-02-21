@@ -113,6 +113,7 @@ Review each dimension and score (✅ Good / ⚠️ Needs Attention / ❌ Problem
 - SQL injection / XSS / CSRF vectors?
 - Secrets exposed?
 - Authorization checks in place?
+- New dependencies introduced? Check for known vulnerabilities (→ `../security-awareness/SKILL.md` for deep scan)
 
 #### Performance
 - N+1 queries?
@@ -131,6 +132,13 @@ Review each dimension and score (✅ Good / ⚠️ Needs Attention / ❌ Problem
 - Appropriate comments (why, not what)?
 - Error handling consistent?
 - No dead code added?
+
+#### Database
+- Migration files backward-compatible? (→ `../database-ops/SKILL.md` for safety checklist)
+- New queries indexed properly?
+- Missing `CONCURRENTLY` on index creation (Postgres)?
+- Large data migrations handled in batches?
+- Down/rollback migration provided?
 
 #### Correctness
 - Does the logic match the described intent?
@@ -155,6 +163,7 @@ Review each dimension and score (✅ Good / ⚠️ Needs Attention / ❌ Problem
 | Architecture | ✅/⚠️/❌ | ... |
 | Security | ✅/⚠️/❌ | ... |
 | Performance | ✅/⚠️/❌ | ... |
+| Database | ✅/⚠️/❌/— | ... |
 | Testing | ✅/⚠️/❌ | ... |
 | Maintainability | ✅/⚠️/❌ | ... |
 | Correctness | ✅/⚠️/❌ | ... |
