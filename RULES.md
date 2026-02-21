@@ -7,14 +7,15 @@ Open-source AI-ассистент для проектного менеджмен
 ## Структура проекта
 
 ```
-projects/shipmate/
+shipmate/
 ├── RULES.md              # Этот файл — правила проекта
 ├── README.md             # Публичное описание (для GitHub)
-├── docs/                 # Документация и аналитика
-│   └── analysis.md       # Анализ архитектуры OpenClaw и план развития
+├── docs/                 # Документация (quick-start, security, config reference)
 ├── skills/               # OpenClaw skills pack (SKILL.md файлы)
 ├── plugin/               # OpenClaw plugin (TypeScript, custom tools)
-└── bootstrap/            # Bootstrap шаблоны (SOUL.md, AGENTS.md)
+├── bootstrap/            # Bootstrap шаблоны (SOUL.md, AGENTS.md)
+├── setup/                # Скрипты установки и настройки
+└── tests/                # Тестовые сценарии
 ```
 
 ## Стек

@@ -14,7 +14,7 @@ Thank you for your interest in contributing to ShipMate! This document outlines 
 
 1. Open a [feature request](.github/ISSUE_TEMPLATE/feature_request.md)
 2. Describe the use case and expected behavior
-3. Check if it aligns with the [project roadmap](docs/TZ-master.md)
+3. Check if it aligns with the project goals described in [README](README.md)
 
 ### Submitting Code
 
