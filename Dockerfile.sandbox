@@ -1,0 +1,72 @@
+# ShipMate — Sandbox Image
+#
+# Lightweight container with CLI tools for OpenClaw sandbox mode.
+# OpenClaw mounts the target project workspace and executes agent bash
+# commands inside this container — providing filesystem isolation.
+#
+# Usage in openclaw.json:
+#   sandbox.docker.image: "ghcr.io/navisevenseven/shipmate-sandbox:latest"
+#
+# Build:
+#   docker build -f Dockerfile.sandbox -t shipmate-sandbox .
+
+FROM node:20-slim
+
+LABEL org.opencontainers.image.title="ShipMate Sandbox"
+LABEL org.opencontainers.image.description="CLI tools sandbox for ShipMate (OpenClaw AI PM)"
+LABEL org.opencontainers.image.source="https://github.com/navisevenseven/shipmate"
+LABEL org.opencontainers.image.licenses="MIT"
+
+# Prevent interactive prompts during install
+ENV DEBIAN_FRONTEND=noninteractive
+
+# ── System packages ──────────────────────────────────────────
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    jq \
+    ca-certificates \
+    gnupg \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── GitHub CLI (gh) ──────────────────────────────────────────
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+      | gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+      > /etc/apt/sources.list.d/github-cli.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends gh \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── GitLab CLI (glab) ───────────────────────────────────────
+ARG GLAB_VERSION=1.46.1
+RUN ARCH=$(dpkg --print-architecture) \
+    && curl -fsSL "https://gitlab.com/gitlab-org/cli/-/releases/v${GLAB_VERSION}/downloads/glab_${GLAB_VERSION}_linux_${ARCH}.deb" \
+       -o /tmp/glab.deb \
+    && dpkg -i /tmp/glab.deb \
+    && rm /tmp/glab.deb
+
+# ── kubectl (optional — installed but may not have cluster access) ─
+ARG KUBECTL_VERSION=1.31.4
+RUN ARCH=$(dpkg --print-architecture) \
+    && curl -fsSL "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/${ARCH}/kubectl" \
+       -o /usr/local/bin/kubectl \
+    && chmod +x /usr/local/bin/kubectl
+
+# ── Non-root user ────────────────────────────────────────────
+RUN groupadd -g 1000 shipmate \
+    && useradd -u 1000 -g shipmate -m -s /bin/bash shipmate
+
+# ── Workspace directory (OpenClaw mounts the project here) ───
+RUN mkdir -p /workspace && chown shipmate:shipmate /workspace
+WORKDIR /workspace
+
+USER shipmate
+
+# ── Healthcheck ──────────────────────────────────────────────
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+    CMD git --version && jq --version
+
+# Default shell
+CMD ["/bin/bash"]

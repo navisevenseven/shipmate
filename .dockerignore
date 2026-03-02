@@ -1,0 +1,53 @@
+# Git
+.git
+.gitignore
+
+# GitHub (not needed in image)
+.github
+
+# Node modules (rebuilt in builder stage)
+plugin/node_modules
+node_modules
+
+# TypeScript build output (rebuilt in builder stage)
+plugin/dist
+
+# Documentation (internal)
+docs/TZ-*.md
+docs/dogfooding.md
+
+# Tests
+tests/
+
+# Development files
+*.md
+!README.md
+!CONTRIBUTING.md
+!SECURITY.md
+!LICENSE
+
+# IDE
+.vscode
+.cursor
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Environment (secrets!)
+.env
+.env.*
+!.env.example
+
+# Archives
+*.tar.gz
+*.zip
+CHECKSUMS.txt*
